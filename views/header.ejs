@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>SNR</title>
+    <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</head>
+
+<body>
+
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="#">SNR Management</a>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li id='doc'><a href="/doc">API doc</a></li>
+                    <li id='snr'><a href="/web/stats/snr">SNR</a></li>
+                    <li id='peer'><a href="/web/stats/peer">Peer</a></li>
+                    <li id='setting'><a href="/web/setting">Settings</a></li>
+                    <% if(user) { %>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Hi <%=user.username%><span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="#">Profile</a></li>
+                                <li role="separator" class="divider"></li>
+                                <li><a href="/web/signin/logout">Logout</a></li>
+                            </ul>
+                        </li>
+                        <% } %>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <script>
+        $('#<%=title%>').addClass('active');
+
+    </script>
+
+    <style>
+        .sidebar {
+            margin-bottom: 70px;
+        }
+        
+        body {
+            padding-top: 70px;
+        }
+    </style>

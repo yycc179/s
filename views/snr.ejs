@@ -1,0 +1,116 @@
+<%include header%>
+
+
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.11.0/bootstrap-table.min.css">
+    <link rel="stylesheet" href="/stylesheets/dashboard.css">
+    <link rel="stylesheet" href="/stylesheets/jquery.jqplot.css">
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-9 col-md-2 sidebar">
+
+                <div class="list-group" id='city'>
+                    <% cities.forEach(function(city, i){ %>
+                        <button type="button" class="list-group-item" value="<%=city._id%>">
+                    <span class="badge"><%=city.peer%></span><%=city.country%>-<%=city.city%></button>
+                        <% })%>
+
+
+                </div>
+
+            </div>
+
+            <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+                <div class="row placeholders">
+                    <div id="placeholder" style="width:850px;height:350px;"></div>
+                </div>
+                <table id="table"></table>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.11.0/bootstrap-table.min.js"></script>
+
+    <script src="/javascripts/jquery.jqplot.js"></script>
+
+    <script>
+        function refresh_table(city) {
+            $('#table').bootstrapTable({
+                url: "/api/stats/snr/json/" + city,
+                striped: true,
+                pagination: true,
+                sidePagination: "server",
+                pageSize: 10,
+                columns: [{
+                    field: 'ip',
+                    title: 'IP Address',
+                    width:  '30%',                   
+                }, {
+                    field: 'snr',
+                    title: 'SNR',
+                    sortable: true,
+                    align: 'center',
+                    cellStyle: function (value, row, index, field) {
+                        var strclass = "";
+                        if (value > 25) {
+                            strclass = 'success';
+                        }
+                        else if (value > 15) {
+                            strclass = 'info';
+                        }
+                        else if (value > 5) {
+                            strclass = 'warning';
+                        }
+                        else {
+                            strclass = 'danger';
+                        }
+                        return { classes: strclass }
+                    }
+                }, {
+                    field: 'times',
+                    title: 'Update times',
+                    width:  '20%',
+                    align: 'center',
+                }, {
+                    field: 'updatedAt',
+                    title: 'Last updated',
+                    width:  '30%',                    
+                    sortable: true,
+                    align: 'center',
+                    formatter: function (value, row, index) {
+                        return new Date(Date.parse(value)).toLocaleString()
+                    }
+                },]
+            });
+        }
+
+        $("#city").children().click(function (e) {
+            console.log(e.target.value)
+            console.log(e.target.innerText)
+            $('#table').bootstrapTable('destroy');
+            refresh_table(e.target.value)
+            request_graphic(e.target.value);
+
+        })
+
+        function request_graphic(city) {
+            $.getJSON('/api/stats/snr/city/' + city, data => {
+                console.log("done")
+                var plot1 = $.jqplot('placeholder', [data], {
+                    title: 'SNR distribution',
+
+                }).replot();
+
+            })
+        }
+   
+        var city = "<%=cities.length ? cities[0]._id : undefined %>";
+
+        if(city) {
+            request_graphic(city);
+            refresh_table(city)
+        }
+    </script>
+
+    <%include footer%>

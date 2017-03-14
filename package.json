@@ -1,0 +1,51 @@
+{
+  "name": "snr",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "pm2 start ./bin/www -i 1 -n snr",
+    "init": "node ./test/init",
+    "clear": "node ./test/clear",
+    "testa": "ava --verbose test/benchmark/test*.js",
+    "test": "mocha"
+  },
+  "dependencies": {
+    "bluebird": "^3.4.7",
+    "body-parser": "~1.15.1",
+    "connect-flash": "^0.1.1",
+    "connect-redis": "^3.2.0",
+    "cookie-parser": "~1.4.3",
+    "debug": "~2.2.0",
+    "ejs": "~2.4.1",
+    "express": "~4.13.4",
+    "express-session": "^1.13.0",
+    "geoip-lite": "^1.1.8",
+    "jsonwebtoken": "^7.0.1",
+    "mongoose": "^4.7.5",
+    "morgan": "~1.7.0",
+    "passport": "^0.3.2",
+    "passport-local": "^1.0.0",
+    "request": "^2.79.0",
+    "serve-favicon": "~2.3.0",
+    "utility": "^1.8.0"
+  },
+  "main": "./bin/www",
+  "devDependencies": {
+    "ava": "^0.18.2",
+    "chai": "^3.5.0",
+    "mocha": "^3.2.0",
+    "should": "^11.2.0",
+    "supertest": "^3.0.0"
+  },
+  "apidoc": {
+    "title": "API doc",
+    "description": "This doc is for inner developer",
+    "order": [
+      "GENERAL",
+      "PEER",
+      "QOS"
+    ],
+    "url": "/api",
+    "sampleUrl": "/api"
+  }
+}

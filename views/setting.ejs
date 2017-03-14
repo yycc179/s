@@ -1,0 +1,171 @@
+<%include header%>
+  <div class="container">
+    <div id='info' class="alert alert-success" role="alert" hidden=true>
+      Settting success!
+    </div>
+
+    <form class="form-horizontal" id="formPeer">
+      <h2><span class='text-primary'>Peer</span></h2>
+
+      <div class="form-group">
+        <label for="update" class="col-sm-2 control-label">Post period</label>
+        <div class="col-sm-5">
+          <select class="form-control" id='update' name='next_update'></select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="col-sm-2 control-label"></label>
+        <div class="col-sm-5">
+          <div class="checkbox">
+            <label>
+          <input type="checkbox" name='limit' disabled>Regional restrictions
+          </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-5">
+          <button type="submit" id="submit_1" class="btn btn-default"><span class='text-primary'>Submit</span></button>
+        </div>
+      </div>
+
+    </form>
+
+    <form id="formQos" class="form-horizontal">
+      <h2><span class='text-primary'>Qos</span></h2>
+
+      <div class="form-group">
+        <label for="query" class="col-sm-2 control-label">Query period</label>
+        <div class="col-sm-5">
+          <select class="form-control" id='query' name='next_query'></select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="factor" class="col-sm-2 control-label">SNR Factor</label>
+        <div class="col-sm-5">
+          <select class="form-control" id='factor' name='factor'></select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="valid" class="col-sm-2 control-label">SNR valid time</label>
+        <div class="col-sm-5">
+          <select class="form-control" id='valid' name='valid_time'></select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="col-sm-2 control-label">Attenuation algorithm</label>
+        <div class="col-sm-5">
+
+          <select class="form-control" id='att_alg' name='att_alg'></select>
+
+          <!--<div class="radio">
+            <label><input type="radio" name="att_alg" value="1" <%if(config.att_alg==1){%>checked<%}%> >
+                  Half the difference
+                </label>
+          </div>
+
+          <div class="radio">
+            <label><input type="radio" name="att_alg" value="2" <%if(config.att_alg==2){%>checked<%}%>>
+                Step by step(1 db)
+              </label>
+          </div>-->
+
+        </div>
+      </div>
+
+      <div class="form-group" id='step' <%=config.att_alg==1? "hidden" : "" %>>
+        <label for="inputEmail3" class="col-sm-2 control-label">Step(db)</label>
+        <div class="col-sm-5">
+          <input type="number" class="form-control" name="att_step" min="0.25" max="2" step="0.25" value="<%=config.att_step%>" <%=config.att_alg==1? "disabled" : "" %>>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-5">
+          <button type="submit" class="btn btn-default"><span class='text-primary'>Submit</span></button>
+        </div>
+      </div>
+    </form>
+
+    <div>
+      </br>
+      <p class="text-warning">Be more careful, it will effect all the device.</p>
+    </div>
+
+  </div>
+
+  <script src="//oss.maxcdn.com/jquery.form/3.50/jquery.form.min.js"></script>
+
+  <script>
+    function select_draw(name, data, current) {
+      var op = $(`<option value=${data[0]}>${data[1]}</option>)`);
+      if (data[0] == current) op.attr('selected', true);
+      // var op = $(`<option value=${key}>${value}</option>)`);
+      // if (key == current) op.attr('selected', true);
+      $(name).append(op);
+    }
+
+    [
+      [1800, "30 Minutes"],
+      [3600, "60 Minutes"],
+      [5400, "90 Minutes"],
+      [7200, "120 Minutes"],
+    ].forEach(data => select_draw('#update', data, <%=config.next_update %>));
+
+    [
+      [5, "5 Seconds"],
+      [10, "10 Seconds"],
+      [20, "20 Seconds"],
+      [30, "30 Seconds"],
+    ].forEach(data => select_draw('#query', data, <%=config.next_query %>));
+
+    [
+      [0, "0(Minimum)"],
+      [0.1, "10%"],
+      [0.2, "20%"],
+      [0.3, "30%"],
+      [0.4, "40%"],
+      [0.5, "50%"],
+    ].forEach(data => select_draw('#factor', data, <%=config.factor %>));
+
+    [
+      [30, "30 Minutes"],
+      [60, "60 Minutes"],
+      [60, "120 Minutes"],
+    ].forEach(data => select_draw('#valid', data, <%=config.valid_time %>));
+
+
+    [
+      [1, " Half the difference"],
+      [2, "Step by step"],
+    ].forEach(data => select_draw('#att_alg', data, <%=config.att_alg %>));
+
+
+    $('#att_alg').change(e => {
+      var s = $('#step').attr('hidden');
+      $('#step').attr('hidden', !s)
+       $('#step input').attr('disabled', !s)
+    })
+    function postData() {
+      $(this).ajaxSubmit({
+        url: '/web/setting',
+        type: 'post',
+        success: () => {
+          $('#info').slideDown();
+          setTimeout(() => $('#info').fadeOut(), 1500)
+        },
+        error: () => alert('error')
+      });
+      return false;
+    }
+
+    $("#formPeer").submit(postData);
+    $("#formQos").submit(postData);
+  </script>
+
+  <%include footer%>
