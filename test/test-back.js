@@ -1,6 +1,6 @@
 const config = require('../config');
 
-config.db_url =  'mongodb://10.209.168.107:27017/temp_test';
+config.db_url =  'mongodb://localhost:27017/temp_test';
 
 const request = require('supertest')(require('../app'));
 const should = require('should');
