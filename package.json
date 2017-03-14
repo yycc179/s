@@ -3,9 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "start": "pm2 start ./bin/www -i 1 -n snr",
-    "init": "node ./test/init",
-    "clear": "node ./test/clear",
+    "start": "NODE_ENV=production pm2 start ./bin/www -n snr -i 2",
+    "stop": "pm2 kill",
     "testa": "ava --verbose test/benchmark/test*.js",
     "test": "mocha"
   },

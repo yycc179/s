@@ -1,7 +1,7 @@
 
 exports = module.exports = {
     version: 0.1,
-    db_url: 'mongodb://10.209.168.107:27017/snr',
+    db_url: 'mongodb://localhost:27017/snr',
     session_secret: 'snr_secret',
     session_age: 2 * 60 * 60 * 1000,  //2 hours
     hash_slat: 'hash(user)',
