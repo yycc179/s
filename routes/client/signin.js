@@ -7,7 +7,7 @@ const router = require('express').Router()
 
 passport.use(new LocalStrategy((username, password, done) => {
     Admin.findOne({ username, }, (err, user) => {
-        if (err) throw done(err);
+        if (err) return done(err);
 
         if (!user) {
             var message = 'username invalid!'; 

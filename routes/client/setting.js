@@ -17,9 +17,8 @@ router.get('/', (req, res) => {
 
 router.post('/', (req, res, next) => {
     var client = config.client;
-
     for (key in client) {
-        client[key] = req.body[key] || client[key];
+        client[key] = Number(req.body[key]) || client[key];
     }
 
     res.status(200);

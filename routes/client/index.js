@@ -1,17 +1,17 @@
 const router = require('express').Router()
     , session = require('express-session')
     , passport = require('passport')
+    , mongoStore = require('connect-mongo')(session)
+    // , redisStore = require('connect-redis')(session)
     , config = require('../../config');
 
 
 router.use(session({
-    // store: new redisStore({
-    //     "host": "127.0.0.1",
-    //     "port": "6379",
-    //     "ttl": config.session_age,
-    // }),
+    store: new mongoStore({
+        'url': config.db_url,
+    }),
     secret: config.session_secret,
-    cookie: { maxAge: config.session_age },
+    // cookie: { maxAge: config.session_age },
     resave: true,
     saveUninitialized: true
 }));
