@@ -5,8 +5,10 @@
  */
 
 var app = require('../app');
-var debug = require('debug')('fgd:server');
+var debug = require('debug')('snr:server');
 var http = require('http');
+var https =require('https')
+var fs = require('fs')
 
 /**
  * Get port from environment and store in Express.
@@ -21,6 +23,16 @@ app.set('port', port);
 
 var server = http.createServer(app);
 
+if (app.get('env') === 'production') {
+  var httpsServer = https.createServer({
+    key: fs.readFileSync('/etc/letsencrypt/live/www.zttest.top/privatekey.pem', 'utf8'),
+    cert: fs.readFileSync('/etc/letsencrypt/live/www.zttest.top/cert.pem', 'utf8')
+  }, app);
+
+  httpsServer.listen(443, function() {
+    console.log('HTTPS Server is running on: ', HTTPS_PORT);
+  });
+}
 /**
  * Listen on provided port, on all network interfaces.
  */
