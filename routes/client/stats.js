@@ -11,15 +11,21 @@ router.get('/snr', (req, res) => {
 });
 
 
+function getCountry() {
+    return City.aggregate([
+        { $group: { _id: '$country', count: { $sum: '$peer' } } },
+        { $sort: { count: 1 } }]).exec();
+}
+
 router.get('/peer', (req, res) => {
-    City.getCountry()
-    .then(datas => res.render('peer',
-        { title: 'peer', user: req.user, 
-        datas, 
-        countries: datas, 
-        current: null })
-    )
-    .catch(e => next(e))
+    getCountry()
+        .then(datas => res.render('peer',
+            { title: 'peer', user: req.user, 
+            datas, 
+            countries: datas, 
+            current: null })
+        )
+        .catch(e => next(e))
 });
 
 
@@ -34,7 +40,7 @@ router.get('/peer/:country', (req, res, next) => {
         .exec()
         .then(cities => {
             datas = cities
-            return City.getCountry();
+            return getCountry();
         })
         .then(countries => {
             res.render('peer', { title: 'peer', user: req.user, datas, countries, current: country });

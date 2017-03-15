@@ -3,6 +3,7 @@ const Schema = db.Schema;
 
 
 const schema = Schema({
+    _id: { type: String, unique: true, default: require('shortid').generate },
     ip: { type: String, index: true, unique: true },
     city: { type: Schema.Types.ObjectId, ref: 'city' },
     // updatedAt: Date,

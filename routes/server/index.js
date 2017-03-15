@@ -17,7 +17,6 @@ function getClientIp(req) {
 };
 
 function queryCity(ip) {
-    // return Promise.resolve({ city: 'city_1', country: 'CN' })   //yy test
     const data = geoip.lookup(ip);
     if (data && data.city) {
         return Promise.resolve(data)
@@ -51,14 +50,14 @@ function queryCity(ip) {
  * @apiName getConfig
  * @apiParam {String} t type, p | q
  *
- * @apiSuccess {Number} version version info
+ * @apiSuccess {String} version version info
  * @apiSuccess {Boolean} valid  acitve state.
  * @apiSuccess {Number} period  request peroid/seconds.
  * 
  * @apiSuccessExample Success-Response:
  *     HTTP/1.1 200 OK
  *     {
- *       "version": 0.1.0,
+ *       "version": "0.1.0",
  *       "valid": true,
  *       "period": 3600
  *     }
@@ -75,11 +74,11 @@ router.get('/config', (req, res, next) => {
         valid: true
     }
 
-    let mod = Peer;
+    let role = Peer;
     let inc = 1;
     switch (t) {
         case 'q':
-            mod = Qos;
+            role = Qos;
             inc = 0;
             conf.period = client.next_query;
             break;
@@ -92,31 +91,27 @@ router.get('/config', (req, res, next) => {
             break;
     }
 
-    mod.findOneAndUpdate({ ip }, null,
-        { upsert: true, new: true })
-        .exec()
-        .then(doc => {
-            if (doc.city) {
-                return res.json(conf);
-            }
+    role.findOne({ip}).exec((e, d) => {
+        if(e) return next(e);
+        if(d && d.city) return res.json(conf);
 
-            queryCity(ip)
-                .then(({ city = 'unknow', country = 'UNKNOW' }) => {
-                    return City.findOneAndUpdate({ city, country },
-                        { $inc: { peer: inc } },
-                        { upsert: true, new: true })
-                        .exec();
+        queryCity(ip)
+            .then(({ city = 'unknow', country = 'UNKNOW' }) => {
+                return City.findOneAndUpdate({ city, country},
+                    { $inc: { peer: inc }},
+                    { upsert: true, new: true })
+                    .exec();
+            })
+            .then(city => {
+                if(!d) d = new role({ip});
+                d.city = city._id;
+                console.log(d);
+                d.save(e => {
+                    if(e) return next(e);
+                    res.json(conf);
                 })
-                .then(data => {
-                    doc.city = data._id;
-                    doc.save(e => {
-                        if (e) return next(e);
-                        res.json(conf);
-                    });
-                })
-                .catch(e => next(e))
-        })
-        .catch(e => next(e))
+            }).catch(e => next(e))
+    })
 });
 
 
@@ -331,6 +326,7 @@ router.get('/query', (req, res, next) => {
                 {
                     $match: {
                         city: ObjectId(city),
+                        snr: {$gt: SNR_MIN}
                         // updatedAt: { $gt: expire }   //yy test
                     }
                 },
@@ -341,7 +337,6 @@ router.get('/query', (req, res, next) => {
             ]).sort('snr').exec()
         })
         .then(docs => {
-            // console.log(docs)
             if (!docs.length) {
                 return res.json({ err: 'no data', next_query })
             }

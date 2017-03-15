@@ -7,6 +7,7 @@ const db = require('./db')
     , config = require("../config");
 
 const UserShcema = db.Schema({
+    _id: {type: String, unique: true, default: require('shortid').generate},
     username: { type: String, index: true, unique: true },
     password: String,
     email: String,
