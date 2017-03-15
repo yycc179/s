@@ -155,18 +155,17 @@ router.get('/location', (req, res, next) => {
 router.post('/update', (req, res, next) => {
     var body = req.body;
     var snr = body.length && body[body.length - 1].snr;
-
     if (!snr || snr < SNR_MIN || snr > SNR_MAX) {
         return res.status(403).json({ err: 'invalid data' })
     }
 
     const ip = getClientIp(req);
 
-    Peer.updateOne({ ip }, { snr, $inc: { times: 1 } }, (e, raw) => {
+    Peer.findOneAndUpdate({ ip }, { snr, $inc: { times: 1 } }, (e, data) => {
         if (e) {
             next(e)
         }
-        else if (!raw.n) {
+        else if (!data) {
             res.status(401).json({ err: 'config first' })
         }
         else {
