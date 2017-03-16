@@ -1,29 +1,24 @@
 const router = require('express').Router()
-    , Admin = require('../../models/admin')
-    , config = require('../../config');
+    , client = require('../../models/settings');
 
 
-
-
-router.get('/', (req, res) => {
-    res.render('setting', {
-        title: 'setting',
-        user: req.user,
-        config: config.client,
-        // info: req.query.ok
+router.get('/', (req, res, next) => {
+    client.hgetall('config', (e, obj) => {
+        if (e) return next(e);
+        res.render('setting', {
+            title: 'setting',
+            user: req.user,
+            config: obj,
+        });
     });
-
 });
 
 router.post('/', (req, res, next) => {
-    var client = config.client;
-    for (key in client) {
-        client[key] = Number(req.body[key]) || client[key];
-    }
-
-    res.status(200);
-    res.end();
-
+    client.hmset('config', req.body, e => {
+        if(e) return next(e)
+        res.status(200);
+        res.end();
+    });
 });
 
 module.exports = router

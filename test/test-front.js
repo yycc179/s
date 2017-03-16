@@ -1,6 +1,5 @@
 const request = require('supertest')(require('../app'));
-const client = require('../config').client;
-
+const client = require('../models/settings');
 
 describe('Front-end', () => {
     describe('signin', () => {
@@ -78,18 +77,21 @@ describe('Front-end', () => {
                 .expect(200)
                 .end((err, res) => {
                     if (err) return done(err);
-                    client.next_update.should.be.exactly(body.next_update)
-                    done();
+                    client.hget('config', 'next_update', (e, v) => {
+                        if(e) return done(e);
+                        body.next_update.should.be.exactly(parseInt(v))
+                        done();
+                    })
                 })
         })
 
         it('post qos setting, should exactly equal', function (done) {
             var body = {
-                next_query: 50,
-                valid_time: 30,
-                factor: 0.4,
-                att_alg: 2,
-                att_step: 0.75
+                next_query: '50',
+                valid_time: '30',
+                factor: '0.4',
+                att_alg: '2',
+                att_step: '0.75',
             };
 
             request.post('/web/setting')
@@ -98,12 +100,13 @@ describe('Front-end', () => {
                 .expect(200)
                 .end((err, res) => {
                     if (err) return done(err);
-                    client.next_query.should.be.exactly(body.next_query)
-                    client.valid_time.should.be.exactly(body.valid_time)
-                    client.factor.should.be.exactly(body.factor)
-                    client.att_alg.should.be.exactly(body.att_alg)
-                    client.att_step.should.be.exactly(body.att_step)
-                    done();
+                    client.hgetall('config', (e, obj) => {
+                        if(e) return done(e);
+                        delete obj.next_update;
+                        body.should.be.eql(obj)
+                        done();
+                    })
+
                 })
         })
     })
@@ -114,11 +117,20 @@ describe('run finalize', () => {
 
     it('drop test database', function (done) {
         var db = require('../models/db');
+
         db.connection.dropDatabase(err => {
             if (err) return done(err);
             db.disconnect();
             done()
         })
+
+    })
+
+    it('drop test settings', function (done) {
+        client.flushdb(e => {
+            if(e) return done(e)
+            done();
+        })        
 
     })
 

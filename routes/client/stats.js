@@ -1,7 +1,6 @@
 const router = require('express').Router()
     , Admin = require('../../models/admin')
-    , City = require('../../models/city')
-    , config = require('../../config');
+    , City = require('../../models/city');
 
 router.get('/snr', (req, res) => {
     City.find().sort({ peer: -1 }).exec((e, cities) => {

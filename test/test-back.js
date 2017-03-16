@@ -1,17 +1,19 @@
 const config = require('../config');
 
-config.db_url =  'mongodb://localhost:27017/temp_test';
+config.db_url = 'mongodb://localhost:27017/temp_test';
+config.red_num = 1;
 
 const request = require('supertest')(require('../app'));
 const should = require('should');
 
+const client = require('../models/settings');
 
 describe('Back-end', () => {
 
     it('update res 403 if not do config request', function (done) {
         var body = [
-                { snr: 10 },
-                { snr: 20 }];
+            { snr: 10 },
+            { snr: 20 }];
 
         request.post('/api/update')
             .send(body)
@@ -56,7 +58,7 @@ describe('Back-end', () => {
                 .expect(200)
                 .end((err, res) => {
                     if (err) return done(err);
-                    const {version, valid, period} = res.body;
+                    const { version, valid, period } = res.body;
                     version.should.be.a.Number;
                     valid.should.be.a.Boolean;
                     period.should.be.a.Number;
@@ -71,7 +73,7 @@ describe('Back-end', () => {
                 .expect(200)
                 .end((err, res) => {
                     if (err) return done(err);
-                    const {version, valid, period} = res.body;
+                    const { version, valid, period } = res.body;
                     version.should.be.a.Number;
                     valid.should.be.a.Boolean;
                     period.should.be.a.Number;
@@ -83,7 +85,7 @@ describe('Back-end', () => {
 
 
     describe('GET /api/update', () => {
-        
+
         it('post normal data, res json 200 with next_update key', function (done) {
             var body = [
                 { snr: 10 },
@@ -127,13 +129,13 @@ describe('Back-end', () => {
 
         it('error parameter, res json 404 with err', function (done) {
             request.get('/api/query')
-                .query({local: 'error'})
+                .query({ local: 'error' })
                 .expect('Content-Type', /json/)
                 .expect(404, done)
         })
 
 
-        it('high local parameter, res json 200 with snr and next_query', function (done) {
+        it('att algorithm 1, high local parameter, res json 200 with att and next_query', function (done) {
             request.get('/api/query')
                 .query({ local: 25 })
                 .expect('Content-Type', /json/)
@@ -148,21 +150,23 @@ describe('Back-end', () => {
         })
 
         it('low local parameter, res json 200 with no snr but next_query', function (done) {
-                request.get('/api/query')
-                    .query({ local: 10 })
-                    .expect('Content-Type', /json/)
-                    .expect(200)
-                    .end((err, res) => {
-                        if (err) return done(err);
-                        res.body.should.not.have.key('err');
-                        res.body.should.not.have.key('att');
-                        res.body.next_query.should.be.a.Number;
-                        done();
-                    })
-            })
+            request.get('/api/query')
+                .query({ local: 10 })
+                .expect('Content-Type', /json/)
+                .expect(200)
+                .end((err, res) => {
+                    if (err) return done(err);
+                    res.body.should.not.have.key('err');
+                    res.body.should.not.have.key('att');
+                    res.body.next_query.should.be.a.Number;
+                    done();
+                })
+        })
 
         it('att algorithm 2, should res json with att_inc key', function (done) {
-                config.client.att_alg = 2;
+            client.hset('config', 'att_alg', 2, e => {
+                if (e) return done(e);
+
                 request.get('/api/query')
                     .query({ local: 25 })
                     .expect('Content-Type', /json/)
@@ -170,11 +174,17 @@ describe('Back-end', () => {
                     .end((err, res) => {
                         if (err) return done(err);
                         res.body.should.not.have.key('err');
-                        res.body.att_inc.should.be.a.Number;
                         res.body.next_query.should.be.a.Number;
-                        done();
+                        client.hget('config', 'att_step', (e, v) => {
+                            if (e) return done(e);
+                            res.body.att_inc.should.be.exactly(Number(v))
+                            done();
+                        })
+
                     })
             })
+
+        })
 
     })
 

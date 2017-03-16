@@ -1,19 +1,13 @@
 const router = require('express').Router()
     , Promise = require("bluebird")
-    , config = require('../../config')
     , Peer = require('../../models/peer')
     , City = require('../../models/city');
 
-const {SNR_MAX, SNR_MIN, SNR_WEIGHT} = config
-
-const {next_update
-    , next_query
-    , valid_time
-    , factor } = config.client
+const { SNR_MAX, SNR_MIN, SNR_WEIGHT } = require('../../config')
 
 router.get('/snr/city/:city', (req, res, next) => {
     let data = [];
-    const {city = 'unknow'} = req.params;
+    const { city } = req.params;
 
     const ar_group = [];
     for (var j = SNR_MIN; j < SNR_MAX; j += SNR_WEIGHT) {
@@ -24,17 +18,14 @@ router.get('/snr/city/:city', (req, res, next) => {
             .count().exec()])
     }
 
-    Promise.reduce(ar_group, (total, [key, p]) => {
-        return p.then(count => data.push([key, count]))
-    })
+    Promise.reduce(ar_group,
+        (total, [key, p]) => p.then(count => data.push([key, count])))
         .then(() => {
             data.sort((a, b) => {
                 return a[0] - b[0];
             })
             res.json(data);
-        }).catch(e => {
-            next(e);
-        })
+        }).catch(e => next(e))
 });
 
 

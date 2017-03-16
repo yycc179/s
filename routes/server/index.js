@@ -1,13 +1,14 @@
 const router = require('express').Router()
     , Promise = require("bluebird")
+    , ObjectId = require('mongoose').Types.ObjectId
     , geoip = require('geoip-lite')
     , request = require('request')
-    , config = require('../../config')
+    , client = require('../../models/settings')
     , City = require('../../models/city')
     , Qos = require('../../models/qos')
     , Peer = require('../../models/peer');
 
-const { SNR_MAX, SNR_MIN, SNR_WEIGHT, client } = config
+const { SNR_MAX, SNR_MIN, SNR_WEIGHT } = require('../../config')
 
 function getClientIp(req) {
     return req.connection.remoteAddress ||
@@ -76,42 +77,43 @@ router.get('/config', (req, res, next) => {
 
     let role = Peer;
     let inc = 1;
-    switch (t) {
-        case 'q':
-            role = Qos;
-            inc = 0;
-            conf.period = client.next_query;
-            break;
 
-        case 'p':
-            conf.period = client.next_update;
-            break;
-        default:
-            return next();
-            break;
-    }
+    client.hgetallAsync('config')
+        .then(obj => {
+            if (t == 'q') {
+                role = Qos;
+                inc = 0;
+                conf.period = parseInt(obj.next_query);
+            }
+            else if (t == 'p') {
+                conf.period = parseInt(obj.next_update);
+            }
+            else return Promise.reject();
 
-    role.findOne({ip}).exec((e, d) => {
-        if(e) return next(e);
-        if(d && d.city) return res.json(conf);
+            return role.findOne({ ip }).exec();
+        })
+        .then(d => {
+            if (d && d.city) return res.json(conf);
 
-        queryCity(ip)
-            .then(({ city = 'unknow', country = 'UNKNOW' }) => {
-                return City.findOneAndUpdate({ city, country},
-                    { $inc: { peer: inc }},
-                    { upsert: true, new: true })
-                    .exec();
-            })
-            .then(city => {
-                if(!d) d = new role({ip});
-                d.city = city._id;
-                console.log(d);
-                d.save(e => {
-                    if(e) return next(e);
-                    res.json(conf);
+            queryCity(ip)
+                .then(({ city = 'unknow', country = 'UNKNOW' }) => {
+                    return City.findOneAndUpdate({ city, country },
+                        { $inc: { peer: inc } },
+                        { upsert: true, new: true })
+                        .exec();
                 })
-            }).catch(e => next(e))
-    })
+                .then(city => {
+                    if (!d) d = new role({ ip });
+                    d.city = city._id;
+                    console.log(d);
+                    d.save(e => {
+                        if (e) return next(e);
+                        res.json(conf);
+                    })
+                }).catch(e => next(e))
+        })
+        .catch(e => next(e))
+
 });
 
 
@@ -147,6 +149,7 @@ router.get('/location', (req, res, next) => {
  *     }
  * 
  */
+
 router.post('/update', (req, res, next) => {
     var body = req.body;
     var snr = body.length && body[body.length - 1].snr;
@@ -155,44 +158,23 @@ router.post('/update', (req, res, next) => {
     }
 
     const ip = getClientIp(req);
-
-    Peer.findOneAndUpdate({ ip }, { snr, $inc: { times: 1 } }, (e, data) => {
-        if (e) {
-            next(e)
-        }
-        else if (!data) {
-            res.status(401).json({ err: 'config first' })
-        }
-        else {
-            res.json({ next_update: client.next_update })
-        }
-    })
-
-})
-
-router.post('/up', (req, res, next) => {
-    const { snr } = req.body
-    const { next_update } = client;
-
-    if (!snr || snr < SNR_MIN || snr > SNR_MAX) {
-        return res.json({ err: 'Invalid data', next_update })
-    }
-
-    const ip = getClientIp(req);
-    Peer.updateOne({ ip }, { snr }, (e, raw) => {
-        if (e) {
-            next(e)
-        }
-        else if (!raw.n) {
-            res.status(401).json({ err: 'config first' })
-        }
-        else {
-            res.json({ next_update })
-        }
-    })
+    let next_update;
+    client.hgetAsync('config', 'next_update')
+        .then(value => {
+            next_update = parseInt(value);
+            return Peer.findOneAndUpdate({ ip }, { snr, $inc: { times: 1 } }).exec()
+        })
+        .then(data => {
+            if (!data) {
+                res.status(401).json({ err: 'config first' })
+            }
+            else {
+                res.json({ next_update })
+            }
+        })
+        .catch(e => next(e))
 
 })
-
 
 /**
  * @api {get} /query get attenuation
@@ -241,93 +223,38 @@ router.post('/up', (req, res, next) => {
  *     }
  * 
  */
-const ObjectId = require('mongoose').Types.ObjectId
-
-// router.get('/query', (req, res, next) => {
-//     const ip = getClientIp(req);
-//     const { local } = req.query;
-//     const { next_query } = client;
-
-//     if (!local || isNaN(local)) {
-//         return next();
-//     }
-
-
-//     let city;
-//     const expire = new Date();
-//     expire.setMinutes(expire.getMinutes() - client.valid_time);
-//     expire.setSeconds(0);
-
-//     Qos.findOne({ ip }).populate('city').exec()
-//         .then(data => {
-//             city = data && data.city;
-//             if (!city) {
-//                 var e = new Error('config first');
-//                 e.status = 401;
-//                 return Promise.reject(e);
-//             }
-//             return Peer.count({ city: city._id })
-//                 .where('updatedAt').lt(expire).exec();
-//         })
-//         .then(count => {
-//             count = city.peer - count;
-//             var k = parseInt(count * client.factor);
-//             return Peer.find({ city: city._id })
-//                 .where('updatedAt').gt(expire)
-//                 .sort('snr')
-//                 .skip(k)
-//                 .limit(1)
-//                 .exec()
-//         })
-//         .then(docs => {
-//             if (!docs.length) {
-//                 return res.json({ err: 'no data', next_query })
-//             }
-
-//             let { snr } = docs[0];
-
-//             if (local > snr && client.att_alg == 1) {
-//                 res.json({ next_query, att: (local - snr) / 2 })
-//             }
-//             else if (client.att_alg == 2) {
-//                 res.json({ next_query, att_inc: 1 })
-//             }
-//             else {
-//                 res.json({ next_query })
-//             }
-//         })
-//         .catch(e => next(e))
-// })
-
-
 router.get('/query', (req, res, next) => {
     const ip = getClientIp(req);
     const { local } = req.query;
-    const { next_query } = client;
 
     if (!local || isNaN(local)) {
         return next();
     }
 
-    const expire = new Date();
-    expire.setMinutes(expire.getMinutes() - client.valid_time);
-    expire.setSeconds(0);
-
-    Qos.findOne({ ip }).exec()
-        .then(data => {
-            var city = data && data.city;
+    let config;
+    client.hgetallAsync('config')
+        .then(obj => {
+            config = obj
+            return Qos.findOne({ ip }).exec()
+        })
+        .then(doc => {
+            var city = doc && doc.city;
             if (!city) {
                 var e = new Error('config first');
                 e.status = 401;
                 return Promise.reject(e);
             }
 
+            const expire = new Date();
+            expire.setSeconds(0);
+            expire.setMinutes(expire.getMinutes() - config.valid_time);
+
             return Peer.aggregate([
                 {
                     $match: {
                         city: ObjectId(city),
-                        snr: {$gt: SNR_MIN}
-                        // updatedAt: { $gt: expire }   //yy test
+                        snr: { $gt: SNR_MIN },
+                        updatedAt: { $gt: expire }   //yy test
                     }
                 },
                 { $sort: { updatedAt: -1 } },
@@ -337,21 +264,23 @@ router.get('/query', (req, res, next) => {
             ]).sort('snr').exec()
         })
         .then(docs => {
+            const next_query = parseInt(config.next_query);
+
             if (!docs.length) {
                 return res.json({ err: 'no data', next_query })
             }
-            const { snr } = docs[parseInt(docs.length * client.factor)];
+            const { snr } = docs[parseInt(docs.length * config.factor)];
             console.log(snr)
 
-            if (local > snr && client.att_alg == 1) {
-                res.json({ next_query, att: (local - snr) / 2 })
+            var obj = { next_query };
+            if (local > snr && config.att_alg == 1) {
+                obj.att = (local - snr) / 2;
             }
-            else if (client.att_alg == 2) {
-                res.json({ next_query, att_inc: 1 })
+            else if (config.att_alg == 2) {
+                obj.att_inc = Number(config.att_step);
             }
-            else {
-                res.json({ next_query })
-            }
+
+            res.json(obj)
         })
         .catch(e => next(e))
 })
@@ -364,12 +293,13 @@ router.use(function (req, res, next) {
     next(err);
 })
 
-if (process.env.NODE_ENV == 'production') {
+if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
     router.use(function (err, req, res, next) {
         res.status(err.status || 500);
         res.json({
             err: err.message,
-        });
+            stack: err.stack
+        })
     });
 }
 
@@ -378,8 +308,7 @@ router.use(function (err, req, res, next) {
     res.status(err.status || 500);
     res.json({
         err: err.message,
-        stack: err.stack
-    })
+    });
 });
 
 module.exports = router;
