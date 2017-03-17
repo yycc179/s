@@ -8,22 +8,20 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-sm-9 col-md-2 sidebar">
-
                 <div class="list-group" id='city'>
                     <% cities.forEach(function(city, i){ %>
                         <button type="button" class="list-group-item" value="<%=city._id%>">
                     <span class="badge"><%=city.peer%></span><%=city.country%>-<%=city.city%></button>
                         <% })%>
-
-
                 </div>
-
             </div>
 
             <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
                 <div class="row placeholders">
-                    <div id="placeholder" style="width:850px;height:350px;"></div>
+                    <div id="placeholder"  class="col-md-10" style="width:850px;height:350px;"></div>
+                    <!--<div class="col-md-2" style="padding-top: 100px"><h1>Sumarry</h1><h2>23(db)</h2></div>-->
                 </div>
+
                 <table id="table"></table>
             </div>
         </div>
@@ -31,8 +29,12 @@
     </div>
 
     <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.11.0/bootstrap-table.min.js"></script>
-
     <script src="/javascripts/jquery.jqplot.js"></script>
+
+    <script src="/javascripts/plugins/jqplot.canvasTextRenderer.min.js"></script>
+    <script src="/javascripts/plugins/jqplot.canvasAxisLabelRenderer.min.js"></script>
+    <script src="/javascripts/plugins/jqplot.highlighter.min.js"></script>
+    <script src="/javascripts/plugins/jqplot.cursor.min.js"></script>
 
     <script>
         function refresh_table(city) {
@@ -45,7 +47,7 @@
                 columns: [{
                     field: 'ip',
                     title: 'IP Address',
-                    width:  '30%',                   
+                    width: '30%',
                 }, {
                     field: 'snr',
                     title: 'SNR',
@@ -70,12 +72,12 @@
                 }, {
                     field: 'times',
                     title: 'Update times',
-                    width:  '20%',
+                    width: '20%',
                     align: 'center',
                 }, {
                     field: 'updatedAt',
                     title: 'Last updated',
-                    width:  '30%',                    
+                    width: '30%',
                     sortable: true,
                     align: 'center',
                     formatter: function (value, row, index) {
@@ -86,8 +88,6 @@
         }
 
         $("#city").children().click(function (e) {
-            console.log(e.target.value)
-            console.log(e.target.innerText)
             $('#table').bootstrapTable('destroy');
             refresh_table(e.target.value)
             request_graphic(e.target.value);
@@ -99,15 +99,31 @@
                 console.log("done")
                 var plot1 = $.jqplot('placeholder', [data], {
                     title: 'SNR distribution',
-
+                    seriesDefaults: {
+                        showMarker: false,
+                    },
+                    cursor: {
+                        show: true,
+                        zoom: true
+                    },
+                    axes: {
+                        xaxis: {
+                            label: "SNR(db)",
+                            pad: 0
+                        },
+                        yaxis: {
+                            label: "Peer number",
+                            labelRenderer: $.jqplot.CanvasAxisLabelRenderer
+                        }
+                    }
                 }).replot();
 
             })
         }
-   
+
         var city = "<%=cities.length ? cities[0]._id : undefined %>";
 
-        if(city) {
+        if (city) {
             request_graphic(city);
             refresh_table(city)
         }

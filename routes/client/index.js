@@ -21,7 +21,7 @@ router.use(passport.session());
 router.use(require('connect-flash')());
 router.use(require('cookie-parser')());
 
-router.use(require('serve-favicon')('public/favicon.ico'));
+// router.use(require('serve-favicon')('public/favicon.ico'));
 
 router.use('/signin', require('./signin'));
 

@@ -105,7 +105,6 @@ router.get('/config', (req, res, next) => {
                 .then(city => {
                     if (!d) d = new role({ ip });
                     d.city = city._id;
-                    console.log(d);
                     d.save(e => {
                         if (e) return next(e);
                         res.json(conf);
