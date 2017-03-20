@@ -1,19 +1,16 @@
 const router = require('express').Router()
     , Admin = require('../../models/admin')
+    , Join = require("bluebird").join
     , client = require('../../models/settings')
     , City = require('../../models/city');
 
 router.get('/snr', (req, res) => {
-    var cities;
-    City.find().sort({ peer: -1 }).exec()
-        .then(docs => {
-            cities = docs;
-            return client.hgetAsync('config', 'valid_time')
-        })
-        .then(time => {
+    Join(City.find().sort({ peer: -1 }).exec(),
+        client.hgetAsync('config', 'valid_time'),
+        (cities, time) => {
             res.render('snr', { title: 'snr', user: req.user, cities, time });
         })
-        .catch(e => next(e))
+       .catch(e => next(e))
 });
 
 

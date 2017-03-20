@@ -3,6 +3,7 @@ const router = require('express').Router()
     , ObjectId = require('mongoose').Types.ObjectId
     , geoip = require('geoip-lite')
     , request = require('request')
+    , { getUpdatedAt } = require('./utils')
     , client = require('../../models/settings')
     , City = require('../../models/city')
     , Qos = require('../../models/qos')
@@ -85,24 +86,21 @@ router.get('/config', (req, res, next) => {
 
     let role = Peer;
     let inc = 1;
+    var key = 'next_update';
 
-    client.hgetallAsync('config')
-        .then(obj => {
-            if (t == 'q') {
-                role = Qos;
-                inc = 0;
-                conf.period = parseInt(obj.next_query);
-            }
-            else if (t == 'p') {
-                conf.period = parseInt(obj.next_update);
-            }
-            else return Promise.reject();
+    if (t == 'q') {
+        role = Qos;
+        inc = 0;
+        key = 'next_query';
+    }
+    else if (t != 'p') {
+        return next();
+    }
 
-            return role.findOne({ ip }).exec();
-        })
-        .then(d => {
-            if (d && d.city) return res.json(conf);
-
+    Promise.join(client.hgetAsync('config', key),
+        role.findOne({ ip }).exec(), (value, doc) => {
+            conf.period = parseInt(value);
+            if (doc && doc.city) return res.json(conf);
             queryCity(ip)
                 .then(({ city = 'unknow', country = 'UNKNOW' }) => {
                     return City.findOneAndUpdate({ city, country },
@@ -111,13 +109,14 @@ router.get('/config', (req, res, next) => {
                         .exec();
                 })
                 .then(city => {
-                    if (!d) d = new role({ ip });
-                    d.city = city._id;
-                    d.save(e => {
+                    if (!doc) doc = new role({ ip });
+                    doc.city = city._id;
+                    doc.save(e => {
                         if (e) return next(e);
                         res.json(conf);
                     })
-                }).catch(e => next(e))
+                })
+                .catch(e => next(e))
         })
         .catch(e => next(e))
 
@@ -160,24 +159,21 @@ router.get('/location', (req, res, next) => {
 
 router.post('/update', (req, res, next) => {
     var body = req.body;
-    var snr = body.length && body[body.length - 1].snr;
+    const snr = body.length && body[body.length - 1].snr;
     if (!snr || snr < SNR_MIN || snr > SNR_MAX) {
         return res.status(403).json({ err: 'invalid data' })
     }
 
     const ip = getClientIp(req);
-    let next_update;
-    client.hgetAsync('config', 'next_update')
-        .then(value => {
-            next_update = parseInt(value);
-            return Peer.findOneAndUpdate({ ip }, { snr, $inc: { times: 1 } }).exec()
-        })
-        .then(data => {
-            if (!data) {
+
+    Promise.join(client.hgetAsync('config', 'next_update'),
+        Peer.findOneAndUpdate({ ip }, { snr, $inc: { times: 1 } }).exec(),
+        (value, doc) => {
+            if (!doc) {
                 res.status(401).json({ err: 'config first' })
             }
             else {
-                res.json({ next_update })
+                res.json({ next_update: parseInt(value) })
             }
         })
         .catch(e => next(e))
@@ -246,12 +242,10 @@ router.get('/query', (req, res, next) => {
     }
 
     let config;
-    client.hgetallAsync('config')
-        .then(obj => {
-            config = obj
-            return Qos.findOne({ ip }).exec()
-        })
-        .then(doc => {
+    Promise.join(client.hgetallAsync('config'),
+        Qos.findOne({ ip }).exec(),
+        (obj, doc) => {
+            config = obj;
             var city = doc && doc.city;
             if (!city) {
                 var e = new Error('config first');
@@ -259,16 +253,12 @@ router.get('/query', (req, res, next) => {
                 return Promise.reject(e);
             }
 
-            const expire = new Date();
-            expire.setSeconds(0);
-            expire.setMinutes(expire.getMinutes() - config.valid_time);
-
             return Peer.aggregate([
                 {
                     $match: {
                         city: ObjectId(city),
+                        updatedAt: getUpdatedAt(config.valid_time),   //yy test
                         snr: { $gt: SNR_MIN },
-                        updatedAt: { $gt: expire }   //yy test
                     }
                 },
                 { $sort: { updatedAt: -1 } },

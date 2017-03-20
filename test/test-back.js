@@ -66,6 +66,21 @@ describe('Back-end', () => {
                 })
         })
 
+        it('type=p twice, res json with version, valid, period keys', function (done) {
+            request.get('/api/config')
+                .query({ t: 'p' })
+                .expect('Content-Type', /json/)
+                .expect(200)
+                .end((err, res) => {
+                    if (err) return done(err);
+                    const { version, valid, period } = res.body;
+                    version.should.be.a.Number;
+                    valid.should.be.a.Boolean;
+                    period.should.be.a.Number;
+                    done();
+                })
+        })
+
         it('type=q, res json with version, valid, period keys', function (done) {
             request.get('/api/config')
                 .query({ t: 'q' })

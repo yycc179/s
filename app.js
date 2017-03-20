@@ -3,7 +3,7 @@ const express = require('express')
 
 const app = express();
 
-
+app.set('x-powered-by', false)
 // view engine setup
 app.set('views', 'views');
 app.set('view engine', 'ejs');

@@ -11,7 +11,7 @@
                 <div class="list-group" id='city'>
                     <% cities.forEach(function(city, i){ %>
                         <button type="button" class="list-group-item" value="<%=city._id%>">
-                    <span class="badge"><%=city.peer%></span><%=city.country%>-<%=city.city%></button>
+                    <%=city.country%>-<%=city.city%></button>
                         <% })%>
                 </div>
             </div>
@@ -107,7 +107,7 @@
             request_summary(e.target.value);
         })
 
-        function request_graphic(city, time=<%=time %>) {
+        function request_graphic(city, time = <%=time %>) {
             $.getJSON(`/api/stats/snr/city/${city}?t=${time}`, data => {
                 console.log("done")
                 var plot1 = $.jqplot('placeholder', [data], {
@@ -134,13 +134,13 @@
             })
         }
 
-        function request_summary(city, time=<%=time %>) {
+        function request_summary(city, time = <%=time %>) {
             $.getJSON(`/api/stats/snr/summary/${city}?t=${time}`, data => {
                 $.jqplot('summary', [data], {
                     title: 'Summary(x peer < y)',
                     seriesDefaults: {
                         renderer: $.jqplot.BarRenderer,
-                        pointLabels: { show: true, ypadding: 0 },
+                        pointLabels: { show: true },
                     },
                     axes: {
                         xaxis: {
@@ -167,19 +167,15 @@
 
         var city = "<%=cities.length ? cities[0]._id : undefined %>";
 
-
-
-        $('#ef_time').change(e => {
-            if (city) {
-                request_graphic(city, e.target.value);
-                request_summary(city, e.target.value);
-            }
-        })
-
         if (city) {
             request_graphic(city);
             request_summary(city);
             refresh_table(city);
+
+            $('#ef_time').change(e => {
+                request_graphic(city, e.target.value);
+                request_summary(city, e.target.value);
+            })
         }
     </script>
 
