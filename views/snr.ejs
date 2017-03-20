@@ -107,13 +107,11 @@
 
         })
 
-        function request_graphic(city, time) {
+        function request_graphic(city, time=<%=time %>) {
             $.getJSON(`/api/stats/snr/city/${city}?t=${time}`, data => {
                 console.log("done")
                 var plot1 = $.jqplot('placeholder', [data], {
                     title: 'SNR distribution',
-                                    animate: !$.jqplot.use_excanvas,
-
                     seriesDefaults: {
                         showMarker: false,
                     },
@@ -136,7 +134,7 @@
             })
         }
 
-        function request_summary(city, time) {
+        function request_summary(city, time=<%=time %>) {
             $.getJSON(`/api/stats/snr/summary/${city}?t=${time}`, data => {
                 $.jqplot('summary', [data], {
                     title: 'Summary(x peer < y)',
@@ -179,9 +177,8 @@
         })
 
         if (city) {
-            request_graphic(city, <%=time %>);
-            request_summary(city, <%=time %>);
-
+            request_graphic(city);
+            request_summary(city);
             refresh_table(city);
         }
     </script>
