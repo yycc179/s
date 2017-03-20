@@ -102,9 +102,9 @@
 
         $("#city").children().click(function (e) {
             $('#table').bootstrapTable('destroy');
-            refresh_table(e.target.value)
+            refresh_table(e.target.value);
             request_graphic(e.target.value);
-
+            request_summary(e.target.value);
         })
 
         function request_graphic(city, time=<%=time %>) {
