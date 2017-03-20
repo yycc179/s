@@ -23,7 +23,7 @@
         "Success 200": [
           {
             "group": "Success 200",
-            "type": "Number",
+            "type": "String",
             "optional": false,
             "field": "version",
             "description": "<p>version info</p>"
@@ -46,8 +46,13 @@
       },
       "examples": [
         {
-          "title": "Success-Response:",
-          "content": "HTTP/1.1 200 OK\n{\n  \"version\": 0.1.0,\n  \"valid\": true,\n  \"period\": 3600\n}",
+          "title": "Success-Response-peer:",
+          "content": "HTTP/1.1 200 OK\n{\n  \"version\": \"0.1.0\",\n  \"valid\": true,\n  \"period\": 3600\n}",
+          "type": "json"
+        },
+        {
+          "title": "Success-Response-qos:",
+          "content": "HTTP/1.1 200 OK\n{\n  \"version\": \"0.1.0\",\n  \"valid\": true,\n  \"period\": 10\n}",
           "type": "json"
         }
       ]
@@ -75,7 +80,7 @@
             "type": "String",
             "optional": true,
             "field": "stack",
-            "description": "<p>stack info,only in development env</p>"
+            "description": "<p>stack info, only in development env</p>"
           }
         ]
       },
@@ -167,19 +172,14 @@
             "type": "String",
             "optional": true,
             "field": "stack",
-            "description": "<p>stack info,only in development env</p>"
+            "description": "<p>stack info, only in development env</p>"
           }
         ]
       }
     },
     "version": "0.0.0",
     "filename": "routes/server/index.js",
-    "groupTitle": "PEER",
-    "sampleRequest": [
-      {
-        "url": "/api/update"
-      }
-    ]
+    "groupTitle": "PEER"
   },
   {
     "type": "get",
@@ -246,11 +246,16 @@
         },
         {
           "title": "Success-Response-3:",
-          "content": "HTTP/1.1 200 OK\n{\n  \"next_query\": 3600     //sleep\n}",
+          "content": "HTTP/1.1 200 OK\n{\n  \"next_query\": 5    //local < summsry, no need att\n}",
           "type": "json"
         },
         {
-          "title": "Success-Response-4:",
+          "title": "Success-Response-sleep:",
+          "content": "HTTP/1.1 200 OK\n{\n  \"next_query\": 3600    \n}",
+          "type": "json"
+        },
+        {
+          "title": "Success-Response-no-data:",
           "content": "HTTP/1.1 200 OK\n{\n  \"err\": \"no data\",           \n  \"next_query\": 5\n}",
           "type": "json"
         }
@@ -260,7 +265,7 @@
       "examples": [
         {
           "title": "Error-Response:",
-          "content": "HTTP/1.1 403 \n{\n  \"err\": \"config first\"\n}",
+          "content": "HTTP/1.1 401 \n{\n  \"err\": \"config first\"\n}",
           "type": "json"
         },
         {
@@ -283,7 +288,7 @@
             "type": "String",
             "optional": true,
             "field": "stack",
-            "description": "<p>stack info,only in development env</p>"
+            "description": "<p>stack info, only in development env</p>"
           }
         ]
       }

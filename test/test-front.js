@@ -78,7 +78,7 @@ describe('Front-end', () => {
                 .end((err, res) => {
                     if (err) return done(err);
                     client.hget('config', 'next_update', (e, v) => {
-                        if(e) return done(e);
+                        if (e) return done(e);
                         body.next_update.should.be.exactly(parseInt(v))
                         done();
                     })
@@ -101,7 +101,7 @@ describe('Front-end', () => {
                 .end((err, res) => {
                     if (err) return done(err);
                     client.hgetall('config', (e, obj) => {
-                        if(e) return done(e);
+                        if (e) return done(e);
                         delete obj.next_update;
                         body.should.be.eql(obj)
                         done();
@@ -111,27 +111,18 @@ describe('Front-end', () => {
         })
     })
 
-})
-
-describe('run finalize', () => {
-
-    it('drop test database', function (done) {
+    after(function (done) {
         var db = require('../models/db');
-
-        db.connection.dropDatabase(err => {
-            if (err) return done(err);
-            db.disconnect();
-            done()
-        })
-
-    })
-
-    it('drop test settings', function (done) {
-        client.flushdb(e => {
-            if(e) return done(e)
-            done();
-        })        
-
-    })
+        db.connection.dropDatabase()
+            .then(() => {
+                console.log('drop test db');
+                return client.flushdbAsync();
+            })
+            .then(() => {
+                console.log('drop test settings');
+                done();
+            })
+            .catch(e => done(e))
+    });
 
 })

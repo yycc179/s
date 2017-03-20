@@ -17,16 +17,23 @@
             </div>
 
             <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-                <div class="row placeholders">
-                    <div id="placeholder"  class="col-md-10" style="width:850px;height:350px;"></div>
-                    <!--<div class="col-md-2" style="padding-top: 100px"><h1>Sumarry</h1><h2>23(db)</h2></div>-->
+                <div class="row">
+                    <div id="placeholder" class="col-md-4" style="width:700px;height:350px;"></div>
+                    <div id="summary" class="col-md-4" style="width:500px;height:350px"></div>
+                    <div class="col-md-2">
+                        <label for="ef_time" class="col-md-10 control-label">Effective time</label>
+                        <select id='ef_time' class="form-control"></select>
+                    </div>
                 </div>
-
-                <table id="table"></table>
+                <br>
+                <div class="row">
+                    <table id="table"></table>
+                </div>
             </div>
         </div>
     </div>
     </div>
+
 
     <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.11.0/bootstrap-table.min.js"></script>
     <script src="/javascripts/jquery.jqplot.js"></script>
@@ -35,6 +42,12 @@
     <script src="/javascripts/plugins/jqplot.canvasAxisLabelRenderer.min.js"></script>
     <script src="/javascripts/plugins/jqplot.highlighter.min.js"></script>
     <script src="/javascripts/plugins/jqplot.cursor.min.js"></script>
+
+    <script src="/javascripts/plugins/jqplot.pointLabels.js"></script>
+    <script src="/javascripts/plugins/jqplot.canvasTextRenderer.js"></script>
+    <script src="/javascripts/plugins/jqplot.barRenderer.js"></script>
+    <script src="/javascripts/plugins/jqplot.categoryAxisRenderer.js"></script>
+    <script src="/javascripts/common.js"></script>
 
     <script>
         function refresh_table(city) {
@@ -94,11 +107,13 @@
 
         })
 
-        function request_graphic(city) {
-            $.getJSON('/api/stats/snr/city/' + city, data => {
+        function request_graphic(city, time) {
+            $.getJSON(`/api/stats/snr/city/${city}?t=${time}`, data => {
                 console.log("done")
                 var plot1 = $.jqplot('placeholder', [data], {
                     title: 'SNR distribution',
+                                    animate: !$.jqplot.use_excanvas,
+
                     seriesDefaults: {
                         showMarker: false,
                     },
@@ -121,11 +136,53 @@
             })
         }
 
+        function request_summary(city, time) {
+            $.getJSON(`/api/stats/snr/summary/${city}?t=${time}`, data => {
+                $.jqplot('summary', [data], {
+                    title: 'Summary(x peer < y)',
+                    seriesDefaults: {
+                        renderer: $.jqplot.BarRenderer,
+                        pointLabels: { show: true, ypadding: 0 },
+                    },
+                    axes: {
+                        xaxis: {
+                            label: "Factor",
+                            renderer: $.jqplot.CategoryAxisRenderer
+                        },
+                        yaxis: {
+                            label: "SNR(db)",
+                            labelRenderer: $.jqplot.CanvasAxisLabelRenderer
+                        }
+                    }
+                }).replot();
+
+            })
+        }
+
+        [
+            [30, "within 0.5 Hour"],
+            [60, "within 1 Hour"],
+            [120, "within 2 Hour"],
+            [240, "within 4 Hour"],
+            [0, "All"],
+        ].forEach(data => select_draw('#ef_time', data, <%=time %>));
+
         var city = "<%=cities.length ? cities[0]._id : undefined %>";
 
+
+
+        $('#ef_time').change(e => {
+            if (city) {
+                request_graphic(city, e.target.value);
+                request_summary(city, e.target.value);
+            }
+        })
+
         if (city) {
-            request_graphic(city);
-            refresh_table(city)
+            request_graphic(city, <%=time %>);
+            request_summary(city, <%=time %>);
+
+            refresh_table(city);
         }
     </script>
 

@@ -55,7 +55,7 @@ function queryCity(ip) {
  * @apiSuccess {Boolean} valid  acitve state.
  * @apiSuccess {Number} period  request peroid/seconds.
  * 
- * @apiSuccessExample Success-Response:
+ * @apiSuccessExample Success-Response-peer:
  *     HTTP/1.1 200 OK
  *     {
  *       "version": "0.1.0",
@@ -63,6 +63,14 @@ function queryCity(ip) {
  *       "period": 3600
  *     }
  *
+ * @apiSuccessExample Success-Response-qos:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "version": "0.1.0",
+ *       "valid": true,
+ *       "period": 10
+ *     }
+ * 
  * @apiUse NotFoundError
  * 
  */
@@ -130,6 +138,7 @@ router.get('/location', (req, res, next) => {
  * @apiGroup PEER
  * @apiHeader {String} Content-type application/json.
  * @apiParam {String} snr SNR value
+ * @apiSampleRequest off
  * 
  * @apiSuccess {Number} next_update next update interval/seconds
  * 
@@ -203,10 +212,16 @@ router.post('/update', (req, res, next) => {
  *  @apiSuccessExample Success-Response-3:
  *     HTTP/1.1 200 OK
  *     {
- *       "next_query": 3600     //sleep
+ *       "next_query": 5    //local < summsry, no need att
+ *     }
+ * 
+ *  @apiSuccessExample Success-Response-sleep:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "next_query": 3600    
  *     }
  *
- *  @apiSuccessExample Success-Response-4:
+ *  @apiSuccessExample Success-Response-no-data:
  *     HTTP/1.1 200 OK
  *     {
  *       "err": "no data",           

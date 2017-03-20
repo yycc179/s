@@ -1,12 +1,19 @@
 const router = require('express').Router()
     , Admin = require('../../models/admin')
+    , client = require('../../models/settings')
     , City = require('../../models/city');
 
 router.get('/snr', (req, res) => {
-    City.find().sort({ peer: -1 }).exec((e, cities) => {
-        if (e) return next(e);
-        res.render('snr', { title: 'snr', user: req.user, cities});
-    })
+    var cities;
+    City.find().sort({ peer: -1 }).exec()
+        .then(docs => {
+            cities = docs;
+            return client.hgetAsync('config', 'valid_time')
+        })
+        .then(time => {
+            res.render('snr', { title: 'snr', user: req.user, cities, time });
+        })
+        .catch(e => next(e))
 });
 
 
@@ -19,10 +26,12 @@ function getCountry() {
 router.get('/peer', (req, res) => {
     getCountry()
         .then(datas => res.render('peer',
-            { title: 'peer', user: req.user, 
-            datas, 
-            countries: datas, 
-            current: null })
+            {
+                title: 'peer', user: req.user,
+                datas,
+                countries: datas,
+                current: null
+            })
         )
         .catch(e => next(e))
 });
@@ -30,7 +39,7 @@ router.get('/peer', (req, res) => {
 
 router.get('/peer/:country', (req, res, next) => {
     var datas;
-    const {country} = req.params;
+    const { country } = req.params;
     City.aggregate([
         { $match: { country } },
         { $group: { _id: '$city', count: { $sum: '$peer' } } },

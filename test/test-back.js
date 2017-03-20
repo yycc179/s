@@ -188,23 +188,50 @@ describe('Back-end', () => {
 
     })
 
-    describe('GET /api/stats/snr/json/:city', () => {
-        it('res json 200', function (done) {
-            request.get('/api/stats/snr/json/58b6843b52184d84f42e5ae0')
-                .expect('Content-Type', /json/)
-                .expect(200, done)
+
+    describe('GET stats', () => {
+        var city;
+        before(function (done) {
+            const City = require('../models/city')
+
+            City.findOne({}, (e, doc) => {
+                if (e) return done(e);
+                city = doc.id;
+                done();
+            })
         })
 
-    })
+        it('get /api/stats/snr/json/:city, res json 200', function (done) {
+            request.get('/api/stats/snr/json/' + city)
+                .expect('Content-Type', /json/)
+                .expect(200)
+                .end((err, res) => {
+                    if (err) return done(err);
+                    res.body.should.have.key('total');
+                    res.body.should.have.key('rows').and.be.an.Array;
+                    done();
+                })
+        })
 
-    describe('GET /api/stats/snr/city/:city', () => {
-        it('res json 200', function (done) {
-            request.get('/api/stats/snr/city/58b6843b52184d84f42e5ae0')
+        it('get /api/stats/snr/city/:city, res json 200', function (done) {
+            request.get('/api/stats/snr/city/' + city)
                 .expect('Content-Type', /json/)
                 .expect(200)
                 .end((err, res) => {
                     if (err) return done(err);
                     res.body.should.not.be.empty
+                    done();
+                })
+        })
+
+
+        it('get /api/stats/snr/summary/:city, res json 200', function (done) {
+            request.get('/api/stats/snr/summary/' + city)
+                .expect('Content-Type', /json/)
+                .expect(200)
+                .end((err, res) => {
+                    if (err) return done(err);
+                    res.body.should.have.length(6).and.be.an.Array;
                     done();
                 })
         })
