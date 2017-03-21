@@ -5,22 +5,30 @@
 
     <div class="container-fluid">
         <div class="row">
-            <div class="col-sm-3 col-md-2 sidebar">
+            <div class="col-sm-9 col-md-2 sidebar">
                 <ul class="nav nav-sidebar">
-                    <li <%if(!current) {%> class="active" <%}%>><a href="/web/stats/peer">All <span class="sr-only">(current)</span></a></li>
-                    <% countries.forEach(function(country){  %>
-                     <li <%if(country._id === current) {%> class="active" <%}%> value='xxxxxxx'><a href="/web/stats/peer/<%=country._id%>"><%=country._id%> </a> </li>
-                    <% })%>
+                    <li <%=current ? "" : "class=active"%>>
+                        <a href="/web/stats/peer">All</a>
+                    </li>
+                    <% countries.forEach(country => {%>
+                        <li <%=country._id===current ? "class=active" : ""%>>
+                            <a href="/web/stats/peer/<%=country._id%>">
+                                <%=country._id%>
+                            </a>
+                        </li>
+                        <%})%>
                 </ul>
             </div>
 
             <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-                <div id="chart1" style="height:400px;width:800px"></div>
+                <div id="chart1" style="height:400px;width:1000px"></div>
                 <table class="table">
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th><% if(current) {%>City <%} else {%> Country <%}%> name</th>
+                            <th>
+                                <%=current?"City":"Country"%> name
+                            </th>
                             <th>Peer count</th>
                         </tr>
                     </thead>
@@ -32,7 +40,7 @@
                                     <%=i%>
                                 </th>
                                 <td>
-                                    <%= data._id%>
+                                    <%=data._id%>
                                 </td>
                                 <td>
                                     <%=data.count%>
@@ -44,7 +52,6 @@
             </div>
         </div>
     </div>
-    </div>
 
     <script src="/javascripts/jquery.jqplot.min.js"></script>
     <script src="/javascripts/plugins/jqplot.categoryAxisRenderer.min.js"></script>
@@ -52,46 +59,48 @@
     <script src="/javascripts/plugins/jqplot.canvasTextRenderer.min.js"></script>
     <script src="/javascripts/plugins/jqplot.pointLabels.min.js"></script>
     <script src="/javascripts/plugins/jqplot.barRenderer.min.js"></script>
+    <script src="/javascripts/plugins/jqplot.canvasAxisLabelRenderer.min.js"></script>
 
     <script>
-        $(document).ready(function () {
-            var data = [
-                <% datas.forEach(function (data, i) { %>
+        var data = [
+            <% datas.forEach((data, i) => {
+                if (i < 20) {%>
                     ['<%=data._id%>', <%=data.count %>],
-                    <%}) %>];
+                    <%}}) %>];
 
-            $('#chart1').jqplot([data], {
-                title: 'Peer distribution',
-                animate: !$.jqplot.use_excanvas,
-                seriesDefaults: {
-                    renderer: $.jqplot.BarRenderer,
-                    pointLabels: { show: true, ypadding: 0 },
-                    rendererOptions: {
-                        barWidth: 30,
-                        shadow: true,
-                        varyBarColor: true
-                    },
+        $('#chart1').jqplot([data], {
+            title: 'Peer distribution',
+            animate: !$.jqplot.use_excanvas,
+            seriesDefaults: {
+                renderer: $.jqplot.BarRenderer,
+                pointLabels: { show: true, ypadding: 0 },
+                rendererOptions: {
+                    barWidth: 30,
+                    shadow: true,
+                    varyBarColor: true
                 },
+            },
 
-                axesDefaults: {
-                    tickRenderer: $.jqplot.CanvasAxisTickRenderer,
-                    tickOptions: {
-                        fontFamily: 'Georgia',
-                        fontSize: '15pt',
-                        angle: -30
-                    }
-                },
-                axes: {
-                    xaxis: {
-                        renderer: $.jqplot.CategoryAxisRenderer,
-                    },
-                    yaxis: {
-                        tickOptions: {
-                            formatString: '%d'
-                        },
-                    }
+            axesDefaults: {
+                tickRenderer: $.jqplot.CanvasAxisTickRenderer,
+                tickOptions: {
+                    fontFamily: 'Georgia',
+                    fontSize: '15pt',
+                    angle: -30
                 }
-            });
+            },
+            axes: {
+                xaxis: {
+                    renderer: $.jqplot.CategoryAxisRenderer,
+                },
+                yaxis: {
+                    labelRenderer: $.jqplot.CanvasAxisLabelRenderer,
+                    label: "Peer Count",
+                    tickOptions: {
+                        formatString: '%d'
+                    },
+                }
+            }
         });
     </script>
 

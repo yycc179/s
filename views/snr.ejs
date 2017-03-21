@@ -8,13 +8,16 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-sm-9 col-md-2 sidebar">
-                <div class="list-group" id='city'>
-                    <% cities.forEach(function(city, i){ %>
-                        <button type="button" class="list-group-item" value="<%=city._id%>">
-                    <%=city.country%>-<%=city.city%>
-                    </button>
+                <ul class="nav nav-sidebar" id='city'>
+                    <% cities.forEach((city, i) => { %>
+                        <li value="<%=city._id%>" <%=i==0 ? "class=active" : '' %>>
+                            <a>
+                                <%=city.country%>-
+                                    <%=city.city%>
+                            </a>
+                        </li>
                         <% })%>
-                </div>
+                </ul>
             </div>
 
             <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
@@ -33,19 +36,14 @@
             </div>
         </div>
     </div>
-    </div>
-
 
     <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.11.0/bootstrap-table.min.js"></script>
-    <script src="/javascripts/jquery.jqplot.min.js"></script>
 
+    <script src="/javascripts/jquery.jqplot.min.js"></script>
     <script src="/javascripts/plugins/jqplot.canvasTextRenderer.min.js"></script>
     <script src="/javascripts/plugins/jqplot.canvasAxisLabelRenderer.min.js"></script>
-    <script src="/javascripts/plugins/jqplot.highlighter.min.js"></script>
     <script src="/javascripts/plugins/jqplot.cursor.min.js"></script>
-
     <script src="/javascripts/plugins/jqplot.pointLabels.min.js"></script>
-    <script src="/javascripts/plugins/jqplot.canvasTextRenderer.min.js"></script>
     <script src="/javascripts/plugins/jqplot.barRenderer.min.js"></script>
     <script src="/javascripts/plugins/jqplot.categoryAxisRenderer.min.js"></script>
     <script src="/javascripts/common.js"></script>
@@ -178,7 +176,9 @@
             var current
             $("#city").children().click(function (e) {
                 $('#table').bootstrapTable('destroy');
-                current = e.target.value
+                current = $(this).attr('value')
+                $(this).siblings().removeClass('active');
+                $(this).addClass('active')
                 refresh_table(current);
                 request_graphic(current);
                 request_summary(current);
