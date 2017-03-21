@@ -11,7 +11,8 @@
                 <div class="list-group" id='city'>
                     <% cities.forEach(function(city, i){ %>
                         <button type="button" class="list-group-item" value="<%=city._id%>">
-                    <%=city.country%>-<%=city.city%></button>
+                    <%=city.country%>-<%=city.city%>
+                    </button>
                         <% })%>
                 </div>
             </div>
@@ -36,17 +37,17 @@
 
 
     <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.11.0/bootstrap-table.min.js"></script>
-    <script src="/javascripts/jquery.jqplot.js"></script>
+    <script src="/javascripts/jquery.jqplot.min.js"></script>
 
     <script src="/javascripts/plugins/jqplot.canvasTextRenderer.min.js"></script>
     <script src="/javascripts/plugins/jqplot.canvasAxisLabelRenderer.min.js"></script>
     <script src="/javascripts/plugins/jqplot.highlighter.min.js"></script>
     <script src="/javascripts/plugins/jqplot.cursor.min.js"></script>
 
-    <script src="/javascripts/plugins/jqplot.pointLabels.js"></script>
-    <script src="/javascripts/plugins/jqplot.canvasTextRenderer.js"></script>
-    <script src="/javascripts/plugins/jqplot.barRenderer.js"></script>
-    <script src="/javascripts/plugins/jqplot.categoryAxisRenderer.js"></script>
+    <script src="/javascripts/plugins/jqplot.pointLabels.min.js"></script>
+    <script src="/javascripts/plugins/jqplot.canvasTextRenderer.min.js"></script>
+    <script src="/javascripts/plugins/jqplot.barRenderer.min.js"></script>
+    <script src="/javascripts/plugins/jqplot.categoryAxisRenderer.min.js"></script>
     <script src="/javascripts/common.js"></script>
 
     <script>
@@ -100,14 +101,7 @@
             });
         }
 
-        $("#city").children().click(function (e) {
-            $('#table').bootstrapTable('destroy');
-            refresh_table(e.target.value);
-            request_graphic(e.target.value);
-            request_summary(e.target.value);
-        })
-
-        function request_graphic(city, time = <%=time %>) {
+        function request_graphic(city, time = $('#ef_time').val()) {
             $.getJSON(`/api/stats/snr/city/${city}?t=${time}`, data => {
                 console.log("done")
                 var plot1 = $.jqplot('placeholder', [data], {
@@ -136,7 +130,7 @@
             })
         }
 
-        function request_summary(city, time = <%=time %>) {
+        function request_summary(city, time = $('#ef_time').val()) {
             $.getJSON(`/api/stats/snr/summary/${city}?t=${time}`, data => {
                 $.jqplot('summary', [data], {
                     title: 'Summary(x peer < y)',
@@ -181,10 +175,18 @@
             request_graphic(city);
             request_summary(city);
             refresh_table(city);
+            var current
+            $("#city").children().click(function (e) {
+                $('#table').bootstrapTable('destroy');
+                current = e.target.value
+                refresh_table(current);
+                request_graphic(current);
+                request_summary(current);
+            })
 
             $('#ef_time').change(e => {
-                request_graphic(city, e.target.value);
-                request_summary(city, e.target.value);
+                request_graphic(current || city, e.target.value);
+                request_summary(current || city, e.target.value);
             })
         }
     </script>

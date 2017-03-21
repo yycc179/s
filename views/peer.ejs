@@ -9,7 +9,7 @@
                 <ul class="nav nav-sidebar">
                     <li <%if(!current) {%> class="active" <%}%>><a href="/web/stats/peer">All <span class="sr-only">(current)</span></a></li>
                     <% countries.forEach(function(country){  %>
-                     <li <%if(country._id === current) {%> class="active" <%}%>><a href="/web/stats/peer/<%=country._id%>"><%=country._id%> </a> </li>
+                     <li <%if(country._id === current) {%> class="active" <%}%> value='xxxxxxx'><a href="/web/stats/peer/<%=country._id%>"><%=country._id%> </a> </li>
                     <% })%>
                 </ul>
             </div>
@@ -46,30 +46,15 @@
     </div>
     </div>
 
-    <style>
-
-    </style>
-
-
-    <script src="/javascripts/jquery.jqplot.js"></script>
-    <script language="javascript" type="text/javascript" src="/javascripts/plugins/jqplot.categoryAxisRenderer.js"></script>
-    <script language="javascript" type="text/javascript" src="/javascripts/plugins/jqplot.canvasAxisTickRenderer.js"></script>
-    <script language="javascript" type="text/javascript" src="/javascripts/plugins/jqplot.canvasTextRenderer.js"></script>
-    <script language="javascript" type="text/javascript" src="/javascripts/plugins/jqplot.pointLabels.js"></script>
-    <script language="javascript" type="text/javascript" src="/javascripts/plugins/jqplot.barRenderer.js"></script>
+    <script src="/javascripts/jquery.jqplot.min.js"></script>
+    <script src="/javascripts/plugins/jqplot.categoryAxisRenderer.min.js"></script>
+    <script src="/javascripts/plugins/jqplot.canvasAxisTickRenderer.min.js"></script>
+    <script src="/javascripts/plugins/jqplot.canvasTextRenderer.min.js"></script>
+    <script src="/javascripts/plugins/jqplot.pointLabels.min.js"></script>
+    <script src="/javascripts/plugins/jqplot.barRenderer.min.js"></script>
 
     <script>
         $(document).ready(function () {
-            var line1 = [['Nissan', 10], ['Porche', 6], ['Acura', 2], ['Aston Martin', 5], ['Rolls Royce', 6], ['a', 1]
-                , ['b', 1]
-                , ['c', 1]
-                , ['d', 1]
-                , ['e', 1]
-                , ['f', 1]
-                , ['g', 1]
-                , ['h', 1]
-                , ['g', 100]
-            ];
             var data = [
                 <% datas.forEach(function (data, i) { %>
                     ['<%=data._id%>', <%=data.count %>],
