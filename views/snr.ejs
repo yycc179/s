@@ -122,15 +122,17 @@
                     axes: {
                         xaxis: {
                             label: "SNR(db)",
-                            pad: 0
+                            renderer: $.jqplot.CategoryAxisRenderer,
                         },
                         yaxis: {
                             label: "Peer number",
+                            tickOptions: {
+                                formatString: '%d'
+                            },
                             labelRenderer: $.jqplot.CanvasAxisLabelRenderer
                         }
                     }
                 }).replot();
-
             })
         }
 
@@ -140,18 +142,26 @@
                     title: 'Summary(x peer < y)',
                     seriesDefaults: {
                         renderer: $.jqplot.BarRenderer,
+                        rendererOptions: {
+                            barMargin: 15,
+                        },
                         pointLabels: { show: true },
                     },
                     axes: {
                         xaxis: {
                             label: "Factor",
-                            renderer: $.jqplot.CategoryAxisRenderer
+                            renderer: $.jqplot.CategoryAxisRenderer,
                         },
                         yaxis: {
                             label: "SNR(db)",
-                            labelRenderer: $.jqplot.CanvasAxisLabelRenderer
+                            max: 30,
+                            tickOptions: {
+                                formatString: '%.1f'
+                            },
+                            labelRenderer: $.jqplot.CanvasAxisLabelRenderer,
                         }
                     }
+
                 }).replot();
 
             })
