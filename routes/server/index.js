@@ -274,11 +274,10 @@ router.get('/query', (req, res, next) => {
                 return res.json({ err: 'no data', next_query })
             }
             const { snr } = docs[parseInt(docs.length * config.factor)];
-            console.log(snr)
 
             var obj = { next_query };
             if (local > snr && config.att_alg == 1) {
-                obj.att = (local - snr) / 2;
+                obj.att = ((local - snr) / 2).toFixed(2);
             }
             else if (config.att_alg == 2) {
                 obj.att_inc = Number(config.att_step);
