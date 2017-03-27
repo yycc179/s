@@ -277,7 +277,7 @@ router.get('/query', (req, res, next) => {
 
             var obj = { next_query };
             if (local > snr && config.att_alg == 1) {
-                obj.att = ((local - snr) / 2).toFixed(2);
+                obj.att = Number(((local - snr) / 2).toFixed(2));
             }
             else if (config.att_alg == 2) {
                 obj.att_inc = Number(config.att_step);
