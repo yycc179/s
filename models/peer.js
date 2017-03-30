@@ -5,7 +5,7 @@ const schema = Schema({
     ip: { type: String, index: true, unique: true },
     city: { type: Schema.Types.ObjectId, index: true, ref: 'city' },
     snr: Number,
-    times: Number,
+    times: {type: Number, default: 0},
 }, {
         versionKey: false,
         timestamps: true

@@ -2,6 +2,7 @@
 
 
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.11.0/bootstrap-table.min.css">
+    <link href="//cdn.bootcss.com/x-editable/1.5.1/bootstrap-editable/css/bootstrap-editable.css" rel="stylesheet">
     <link rel="stylesheet" href="/stylesheets/dashboard.css">
     <link rel="stylesheet" href="/stylesheets/jquery.jqplot.css">
 
@@ -31,6 +32,19 @@
                 </div>
                 <br>
                 <div class="row">
+                    <div id="toolbar" class="btn-group">
+                        <button id="btn_add" type="button" class="btn btn-default">
+                        <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>Add
+                        </button>
+                        <button id="btn_save" type="button" class="btn btn-default">
+                        <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>Save
+                        </button> 
+                        <button id="btn_remove" type="button" class="btn btn-default">
+                        <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>Remove
+                        </button>                           
+
+                    </div>
+
                     <table id="table"></table>
                 </div>
             </div>
@@ -47,27 +61,87 @@
     <script src="/javascripts/plugins/jqplot.barRenderer.min.js"></script>
     <script src="/javascripts/plugins/jqplot.categoryAxisRenderer.min.js"></script>
 
+    <script src="/javascripts/bootstrap-table-editable.js"></script>
+    <script src="/javascripts/bootstrap-editable.min.js"></script>
+
     <script src="//cdn.bootcss.com/babel-standalone/6.23.1/babel.min.js"></script>
-    <!--<script src="https://unpkg.com/babel-standalone@6/babel.js"></script>-->
     <script type="text/babel" src="/javascripts/common.js"></script>
 
     <script type="text/babel">
+        $('#btn_add').click(function() {
+            var snr = (Math.random() * 30).toFixed(2);
+            var ip =  '10.' + parseInt(snr) + '.' + (Math.random() * 250).toFixed(2)
+            
+            var params = {index: 0, row:{ip, snr, edit: true}}
+            $('#table').bootstrapTable('insertRow', params);
+        })
+
+        $('#btn_save').click(function() {
+            var all = $('#table').bootstrapTable('getData');
+            var edit = all.filter(i => i.edit)
+            if(!edit.length) {
+                return alert('Nothing change!')
+            }
+            $('#table').bootstrapTable('showLoading');
+            $.ajax({
+                type: "post",
+                url: '/api/mock/save/'+ current,
+                data: JSON.stringify(edit),
+                contentType: "application/json",
+                dataType: 'json',
+                error: () => {$('#table').bootstrapTable('hideLoading'), alert('Save fail, may have duplicate data!')},
+                complete: function () {
+                    request_graphic(current);
+                    request_summary(current);
+                    refresh_table(current);
+                }
+            });
+        })
+
+        $('#btn_remove').click(function() {
+            if(!confirm('Delete all data?')) {
+                return;
+            }
+            $.post('/api/mock/remove/'+ current, 
+                () => {
+                request_graphic(current);
+                request_summary(current);
+                refresh_table(current);
+            })
+        })
+
         function refresh_table(city) {
+            $('#table').bootstrapTable('destroy');
             $('#table').bootstrapTable({
                 url: "/api/stats/snr/json/" + city,
+                toolbar: '#toolbar', 
+                toolbarAlign: 'right',
                 striped: true,
                 pagination: true,
                 sidePagination: "server",
                 pageSize: 10,
+                idField : 'ip',
+                onEditableSave: function(field, row, oldValue) {
+                    row.edit = row[field] !== oldValue;
+                },
                 columns: [{
                     field: 'ip',
                     title: 'IP Address',
-                    width: '30%'
+                    width: '30%',
                 }, {
                     field: 'snr',
                     title: 'SNR',
                     sortable: true,
                     align: 'center',
+                    editable: {
+                        type: 'text',
+                        title: 'SNR',
+                        mode: 'inline',
+                        validate: function (v) {
+                            if (isNaN(v)) return 'Should be a number';
+                            if (v <= 0 || v > 30) return 'input 0 - 30';
+                        }
+                    },
                     cellStyle: function (value, row, index, field) {
                         var strclass = "";
                         if (value > 25) {
@@ -98,13 +172,11 @@
                     formatter: function (value, row, index) {
                         return new Date(Date.parse(value)).toLocaleString()
                     }
-                }]
+                }],
             });
         }
 
-        function request_graphic(city) {
-            var time = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : $('#ef_time').val();
-
+        function request_graphic(city, time = $('#ef_time').val()) {
             $.getJSON(`/api/stats/snr/city/${city}?t=${time}`, data => {
                 console.log("done")
                 var plot1 = $.jqplot('graphic', [data], {
@@ -133,9 +205,7 @@
             })
         }
 
-        function request_summary(city) {
-            var time = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : $('#ef_time').val();
-
+        function request_summary(city, time = $('#ef_time').val()) {
             $.getJSON(`/api/stats/snr/summary/${city}?t=${time}`, data => {
                 $.jqplot('summary', [data], {
                     title: 'Summary(x peer < y)',
@@ -174,15 +244,15 @@
             [0, "All"],
         ].forEach(data => select_draw('#ef_time', data, <%=time %>));
 
-        var city = "<%=cities.length ? cities[0]._id : undefined %>";
+        var current = "<%=cities.length ? cities[0]._id : undefined %>";
 
-        if (city) {
-            request_graphic(city);
-            request_summary(city);
-            refresh_table(city);
-            var current
+        if (current) {
+            request_graphic(current);
+            request_summary(current);
+            refresh_table(current);
+
             $("#city").children().click(function (e) {
-                $('#table').bootstrapTable('destroy');
+        
                 current = $(this).attr('value')
                 $(this).siblings().removeClass('active');
                 $(this).addClass('active')
@@ -192,8 +262,8 @@
             })
 
             $('#ef_time').change(e => {
-                request_graphic(current || city, e.target.value);
-                request_summary(current || city, e.target.value);
+                request_graphic(current, e.target.value);
+                request_summary(current, e.target.value);
             })
         }
     </script>

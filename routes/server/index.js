@@ -289,6 +289,7 @@ router.get('/query', (req, res, next) => {
 })
 
 router.use('/stats', require('./stats'));
+router.use('/mock', require('./mock'));
 
 router.use(function (req, res, next) {
     var err = new Error('invalid request');
