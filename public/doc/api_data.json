@@ -14,6 +14,13 @@
             "optional": false,
             "field": "t",
             "description": "<p>type, p | q</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "m",
+            "description": "<p>mac address</p>"
           }
         ]
       }
@@ -196,6 +203,13 @@
             "optional": false,
             "field": "local",
             "description": "<p>local snr value</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "m",
+            "description": "<p>local mac address</p>"
           }
         ]
       }
@@ -230,6 +244,41 @@
             "optional": false,
             "field": "next_query",
             "description": "<p>next query internal/seconds.</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "Number",
+            "optional": false,
+            "field": "mode",
+            "description": "<p>att mode 1 manual, 0 auto.</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "Object",
+            "optional": true,
+            "field": "manual",
+            "description": "<p>manual mode step.</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "Number",
+            "optional": false,
+            "field": "manual.target",
+            "description": "<p>manual target.</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "Number",
+            "optional": false,
+            "field": "manual.step",
+            "description": "<p>manual step.</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "Number",
+            "optional": false,
+            "field": "manual.step_time",
+            "description": "<p>manual step time.</p>"
           }
         ]
       },
@@ -247,6 +296,11 @@
         {
           "title": "Success-Response-3:",
           "content": "HTTP/1.1 200 OK\n{\n  \"next_query\": 5    //local < summsry, no need att\n}",
+          "type": "json"
+        },
+        {
+          "title": "Success-Response-man-mode:",
+          "content": "HTTP/1.1 200 OK\n{\n  \"next_query\": 5, \n  \"manual\": {\n     target: 3,\n     step: 0.25,\n     step_time: 5 \n  } \n}",
           "type": "json"
         },
         {

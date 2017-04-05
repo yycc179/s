@@ -2,7 +2,8 @@ const db = require('./db');
 const Schema = db.Schema;
 
 const schema = Schema({
-    ip: { type: String, index: true, unique: true },
+    mac: { type: String, index: true, unique: true },
+    ip: { type: String },    
     city: { type: Schema.Types.ObjectId, index: true, ref: 'city' },
     snr: Number,
     times: {type: Number, default: 0},

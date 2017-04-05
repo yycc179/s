@@ -51,6 +51,7 @@ function queryCity(ip) {
  * @apiGroup GENERAL
  * @apiName getConfig
  * @apiParam {String} t type, p | q
+ * @apiParam {String} m mac address
  *
  * @apiSuccess {String} version version info
  * @apiSuccess {Boolean} valid  acitve state.
@@ -78,6 +79,7 @@ function queryCity(ip) {
 router.get('/config', (req, res, next) => {
     const ip = getClientIp(req);
     const { t } = req.query;
+    const mac = req.query.m;
 
     const conf = {
         version: process.env.npm_package_version,
@@ -88,7 +90,10 @@ router.get('/config', (req, res, next) => {
     let inc = 1;
     var key = 'next_update';
 
-    if (t == 'q') {
+    if (!mac) {
+        return next();
+    }
+    else if (t == 'q') {
         role = Qos;
         inc = 0;
         key = 'next_query';
@@ -98,7 +103,7 @@ router.get('/config', (req, res, next) => {
     }
 
     Promise.join(client.hgetAsync('config', key),
-        role.findOne({ ip }).exec(), (value, doc) => {
+        role.findOne({ mac }).exec(), (value, doc) => {
             conf.period = parseInt(value);
             if (doc && doc.city) return res.json(conf);
             queryCity(ip)
@@ -109,7 +114,7 @@ router.get('/config', (req, res, next) => {
                         .exec();
                 })
                 .then(city => {
-                    if (!doc) doc = new role({ ip });
+                    if (!doc) doc = new role({ mac, ip });
                     doc.city = city._id;
                     doc.save(e => {
                         if (e) return next(e);
@@ -184,12 +189,20 @@ router.post('/update', (req, res, next) => {
  * @api {get} /query get attenuation
  * @apiName getAtt
  * @apiGroup QOS
- * @apiParam {Number} local local snr value
+ * @apiParam {Number} l l snr value
+ * @apiParam {String} m l mac address
  *
  * @apiSuccess {Number} [att]  attenuation snr.
  * @apiSuccess {Number} [att_inc]  attenuation inc snr.
  * @apiSuccess {String} [err]  err info.
  * @apiSuccess {Number} next_query  next query internal/seconds.
+ * @apiSuccess {Number} mode  att mode 1 manual, 0 auto.
+ * 
+ * 
+ * @apiSuccess {Object} [manual] manual mode step.
+ * @apiSuccess {Number} manual.target manual target.
+ * @apiSuccess {Number} manual.step manual step.
+ * @apiSuccess {Number} manual.step_time manual step time.
  * 
  * @apiSuccessExample Success-Response-1:
  *     HTTP/1.1 200 OK
@@ -208,7 +221,18 @@ router.post('/update', (req, res, next) => {
  *  @apiSuccessExample Success-Response-3:
  *     HTTP/1.1 200 OK
  *     {
- *       "next_query": 5    //local < summsry, no need att
+ *       "next_query": 5    //l < summsry, no need att
+ *     }
+ * 
+ *  @apiSuccessExample Success-Response-man-mode:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "next_query": 5, 
+ *       "manual": {
+ *          target: 3,
+ *          step: 0.25,
+ *          step_time: 5 
+ *       } 
  *     }
  * 
  *  @apiSuccessExample Success-Response-sleep:
@@ -235,15 +259,16 @@ router.post('/update', (req, res, next) => {
  */
 router.get('/query', (req, res, next) => {
     const ip = getClientIp(req);
-    const { local } = req.query;
+    const mac = req.query.m;
+    const { l, m } = req.query;
 
-    if (!local || isNaN(local)) {
+    if (!l || isNaN(l) || !mac) {
         return next();
     }
 
     let config;
     Promise.join(client.hgetallAsync('config'),
-        Qos.findOne({ ip }).exec(),
+        Qos.findOne({ mac: m }).exec(),
         (obj, doc) => {
             config = obj;
             var city = doc && doc.city;
@@ -251,6 +276,11 @@ router.get('/query', (req, res, next) => {
                 var e = new Error('config first');
                 e.status = 401;
                 return Promise.reject(e);
+            }
+
+            if (!doc.auto) {
+                res.json({ next_query: config.next_query, manual: doc.manual })
+                return Promise.reject();
             }
 
             return Peer.aggregate([
@@ -276,8 +306,8 @@ router.get('/query', (req, res, next) => {
             const { snr } = docs[parseInt(docs.length * config.factor)];
 
             var obj = { next_query };
-            if (local > snr && config.att_alg == 1) {
-                obj.att = Number(((local - snr) / 2).toFixed(2));
+            if (l > snr && config.att_alg == 1) {
+                obj.att = Number(((l - snr) / 2).toFixed(2));
             }
             else if (config.att_alg == 2) {
                 obj.att_inc = Number(config.att_step);
@@ -285,7 +315,9 @@ router.get('/query', (req, res, next) => {
 
             res.json(obj)
         })
-        .catch(e => next(e))
+        .catch(e => {
+            if (e) next(e)
+        })
 })
 
 router.use('/stats', require('./stats'));

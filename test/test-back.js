@@ -28,7 +28,8 @@ describe('Back-end', () => {
 
     it('query res 403 if not do config request', function (done) {
         request.get('/api/query')
-            .query({ local: 25 })
+            .query({ l: 25 })
+            .query({ m: '123' })
             .expect('Content-Type', /json/)
             .expect(401)
             .end((err, res) => {
@@ -51,9 +52,16 @@ describe('Back-end', () => {
                 .expect(404, done)
         })
 
-        it('type=p, res json with version, valid, period keys', function (done) {
+        it('no m parameter, res 404', function (done) {
+            request.get('/api/config')
+                .query({ t: 'q' })
+                .expect(404, done)
+        })
+
+        it('type=p, m = 123, res json with version, valid, period keys', function (done) {
             request.get('/api/config')
                 .query({ t: 'p' })
+                .query({ m: '123' })
                 .expect('Content-Type', /json/)
                 .expect(200)
                 .end((err, res) => {
@@ -66,9 +74,10 @@ describe('Back-end', () => {
                 })
         })
 
-        it('type=p twice, res json with version, valid, period keys', function (done) {
+        it('type=p, m = 123 twice, res json with version, valid, period keys', function (done) {
             request.get('/api/config')
                 .query({ t: 'p' })
+                .query({ m: '123' })
                 .expect('Content-Type', /json/)
                 .expect(200)
                 .end((err, res) => {
@@ -84,6 +93,7 @@ describe('Back-end', () => {
         it('type=q, res json with version, valid, period keys', function (done) {
             request.get('/api/config')
                 .query({ t: 'q' })
+                .query({ m: '123' })
                 .expect('Content-Type', /json/)
                 .expect(200)
                 .end((err, res) => {
@@ -136,23 +146,30 @@ describe('Back-end', () => {
 
     describe('GET /api/query', () => {
 
-        it('no parameter, res json 404 with err', function (done) {
+        it('no l parameter, res json 404 with err', function (done) {
             request.get('/api/query')
                 .expect('Content-Type', /json/)
                 .expect(404, done)
         })
 
-        it('error parameter, res json 404 with err', function (done) {
+        it('error l parameter, res json 404 with err', function (done) {
             request.get('/api/query')
-                .query({ local: 'error' })
+                .query({ l: 'error' })
                 .expect('Content-Type', /json/)
                 .expect(404, done)
         })
 
-
-        it('att algorithm 1, high local parameter, res json 200 with att and next_query', function (done) {
+        it('no m parameter, res json 404 with err', function (done) {
             request.get('/api/query')
-                .query({ local: 25 })
+                .query({ l: 25 })
+                .expect('Content-Type', /json/)
+                .expect(404, done)
+        })
+
+        it('att algorithm 1, high l parameter, res json 200 with att and next_query', function (done) {
+            request.get('/api/query')
+                .query({ l: 25 })
+                .query({ m: '123' })
                 .expect('Content-Type', /json/)
                 .expect(200)
                 .end((err, res) => {
@@ -164,9 +181,10 @@ describe('Back-end', () => {
                 })
         })
 
-        it('low local parameter, res json 200 with no snr but next_query', function (done) {
+        it('low l parameter, res json 200 with no snr but next_query', function (done) {
             request.get('/api/query')
-                .query({ local: 10 })
+                .query({ l: 10 })
+                .query({ m: '123' })
                 .expect('Content-Type', /json/)
                 .expect(200)
                 .end((err, res) => {
@@ -183,7 +201,8 @@ describe('Back-end', () => {
                 if (e) return done(e);
 
                 request.get('/api/query')
-                    .query({ local: 25 })
+                    .query({ l: 25 })
+                    .query({ m: '123' })
                     .expect('Content-Type', /json/)
                     .expect(200)
                     .end((err, res) => {

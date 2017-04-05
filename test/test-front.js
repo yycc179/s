@@ -111,6 +111,20 @@ describe('Front-end', () => {
         })
     })
 
+   describe('/web/setting/qos', () => {
+
+        it('get qos page, res 200', function (done) {
+            request.get('/web/setting/qos')
+                .expect(200, done)
+        })
+
+        it('get qos page, res 200', function (done) {
+            request.get('/web/setting/qos')
+                .expect(200, done)
+        })
+    
+    })
+
     after(function (done) {
         var db = require('../models/db');
         db.connection.dropDatabase()
