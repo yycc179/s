@@ -11,6 +11,7 @@ const schema = Schema({
         step: { type: Number},
         step_time: { type: Number },
     },
+    local: Number,
     auto: { type: Boolean, default: true },
     city: { type: Schema.Types.ObjectId, ref: 'city' },
     // updatedAt: Date,

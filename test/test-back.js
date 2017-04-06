@@ -7,6 +7,7 @@ const request = require('supertest')(require('../app'));
 const should = require('should');
 
 const client = require('../models/settings');
+const Qos = require('../models/qos');
 
 describe('Back-end', () => {
 
@@ -16,6 +17,7 @@ describe('Back-end', () => {
             { snr: 20 }];
 
         request.post('/api/update')
+            .query({ m: '123' })
             .send(body)
             .expect('Content-Type', /json/)
             .expect(401)
@@ -108,8 +110,15 @@ describe('Back-end', () => {
 
     })
 
-
-    describe('GET /api/update', () => {
+    describe('POST /api/update', () => {
+        it('no mac parameter, res 404', function (done) {
+            var body = [
+                { snr: 10 },
+                { snr: 20 }];
+            request.post('/api/update')
+                .send(body)
+                .expect(404, done)
+        })
 
         it('post normal data, res json 200 with next_update key', function (done) {
             var body = [
@@ -117,6 +126,7 @@ describe('Back-end', () => {
                 { snr: 20 }];
 
             request.post('/api/update')
+                .query({ m: '123' })
                 .send(body)
                 .expect('Content-Type', /json/)
                 .expect(200)
@@ -220,6 +230,45 @@ describe('Back-end', () => {
 
         })
 
+        it('set manual mode, should res ok', function (done) {
+            Qos.findOne().then(doc => {
+                var body = {
+                    auto: false,
+                    manual: {
+                        target: 3,
+                        step: 0.25,
+                        step_time: 5,
+                    }
+                }
+                request.post('/web/qos/' + doc._id)
+                    .query({ l: 25 })
+                    .query({ m: '123' })
+                    .send(body)
+                    .expect(200, done)
+            })
+        })
+
+
+        it('mamnual mode query, res json 200 with manual object', function (done) {
+            request.get('/api/query')
+                .query({ l: 10 })
+                .query({ m: '123' })
+                .expect('Content-Type', /json/)
+                .expect(200)
+                .end((err, res) => {
+                    if (err) return done(err);
+                    res.body.should.not.have.key('err');
+                    res.body.should.not.have.key('att');
+                    res.body.next_query.should.be.a.Number;
+                    res.body.manual.should.be.an.Object;
+                    var manual = res.body.manual;
+                    manual.target.should.be.a.Number;
+                    manual.step.should.be.a.Number;
+                    manual.step_time.should.be.a.Number;
+
+                    done();
+                })
+        })
     })
 
 

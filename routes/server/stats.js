@@ -69,7 +69,7 @@ router.get('/snr/json/:city', (req, res, next) => {
     }
 
     const options = {
-        select: '-_id ip snr updatedAt times',
+        select: '-_id ip snr updatedAt times mac',
         sort,
         lean: true,
         leanWithId: false,

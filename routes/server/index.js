@@ -142,6 +142,7 @@ router.get('/location', (req, res, next) => {
  * @apiGroup PEER
  * @apiHeader {String} Content-type application/json.
  * @apiParam {String} snr SNR value
+ * @apiParam {String} m mac address
  * @apiSampleRequest off
  * 
  * @apiSuccess {Number} next_update next update interval/seconds
@@ -161,7 +162,6 @@ router.get('/location', (req, res, next) => {
  *     }
  * 
  */
-
 router.post('/update', (req, res, next) => {
     var body = req.body;
     const snr = body.length && body[body.length - 1].snr;
@@ -169,10 +169,14 @@ router.post('/update', (req, res, next) => {
         return res.status(403).json({ err: 'invalid data' })
     }
 
-    const ip = getClientIp(req);
+    // const ip = getClientIp(req);
+    var mac = req.query.m;
+    if (!mac) {
+        return next()
+    }
 
     Promise.join(client.hgetAsync('config', 'next_update'),
-        Peer.findOneAndUpdate({ ip }, { snr, $inc: { times: 1 } }).exec(),
+        Peer.findOneAndUpdate({ mac }, { snr, $inc: { times: 1 } }).exec(),
         (value, doc) => {
             if (!doc) {
                 res.status(401).json({ err: 'config first' })
@@ -268,7 +272,7 @@ router.get('/query', (req, res, next) => {
 
     let config;
     Promise.join(client.hgetallAsync('config'),
-        Qos.findOne({ mac: m }).exec(),
+        Qos.findOneAndUpdate({ mac: m }, { local: l }).exec(),
         (obj, doc) => {
             config = obj;
             var city = doc && doc.city;
@@ -287,7 +291,7 @@ router.get('/query', (req, res, next) => {
                 {
                     $match: {
                         city: ObjectId(city),
-                        updatedAt: getUpdatedAt(config.valid_time),   //yy test
+                        updatedAt: getUpdatedAt(config.valid_time), 
                         snr: { $gt: SNR_MIN },
                     }
                 },

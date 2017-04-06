@@ -111,18 +111,13 @@ describe('Front-end', () => {
         })
     })
 
-   describe('/web/setting/qos', () => {
+    describe('/web/setting/qos', () => {
 
         it('get qos page, res 200', function (done) {
-            request.get('/web/setting/qos')
+            request.get('/web/qos')
                 .expect(200, done)
         })
 
-        it('get qos page, res 200', function (done) {
-            request.get('/web/setting/qos')
-                .expect(200, done)
-        })
-    
     })
 
     after(function (done) {

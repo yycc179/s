@@ -125,9 +125,11 @@
                     row.edit = row[field] !== oldValue;
                 },
                 columns: [{
+                    field: 'mac',
+                    title: 'MAC Address',
+                }, {
                     field: 'ip',
                     title: 'IP Address',
-                    width: '30%',
                 }, {
                     field: 'snr',
                     title: 'SNR',
@@ -161,12 +163,10 @@
                 }, {
                     field: 'times',
                     title: 'Update times',
-                    width: '20%',
                     align: 'center'
                 }, {
                     field: 'updatedAt',
                     title: 'Last updated',
-                    width: '30%',
                     sortable: true,
                     align: 'center',
                     formatter: function (value, row, index) {
