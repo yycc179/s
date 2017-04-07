@@ -24,7 +24,7 @@ router.post('/:id', (req, res, next) => {
 });
 
 router.get('/local', (req, res, next) => {
-    Qos.find().select('local').lean().exec((e, docs) => {
+    Qos.find().select('snr_local').lean().exec((e, docs) => {
         if (e) return next(e)
         res.json(docs)
     })

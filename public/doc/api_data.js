@@ -128,6 +128,13 @@ define({ "api": [
             "optional": false,
             "field": "snr",
             "description": "<p>SNR value</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "m",
+            "description": "<p>mac address</p>"
           }
         ]
       }
@@ -139,7 +146,7 @@ define({ "api": [
             "group": "Success 200",
             "type": "Number",
             "optional": false,
-            "field": "next_update",
+            "field": "next",
             "description": "<p>next update interval/seconds</p>"
           }
         ]
@@ -147,7 +154,7 @@ define({ "api": [
       "examples": [
         {
           "title": "Success-Response:",
-          "content": "HTTP/1.1 200 OK\n{\n  \"next_update\": 3600\n}",
+          "content": "HTTP/1.1 200 OK\n{\n  \"next\": 3600\n}",
           "type": "json"
         }
       ]
@@ -201,7 +208,7 @@ define({ "api": [
             "group": "Parameter",
             "type": "Number",
             "optional": false,
-            "field": "local",
+            "field": "l",
             "description": "<p>local snr value</p>"
           },
           {
@@ -209,7 +216,7 @@ define({ "api": [
             "type": "String",
             "optional": false,
             "field": "m",
-            "description": "<p>local mac address</p>"
+            "description": "<p>mac address</p>"
           }
         ]
       }
@@ -217,20 +224,6 @@ define({ "api": [
     "success": {
       "fields": {
         "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "Number",
-            "optional": true,
-            "field": "att",
-            "description": "<p>attenuation snr.</p>"
-          },
-          {
-            "group": "Success 200",
-            "type": "Number",
-            "optional": true,
-            "field": "att_inc",
-            "description": "<p>attenuation inc snr.</p>"
-          },
           {
             "group": "Success 200",
             "type": "String",
@@ -242,75 +235,46 @@ define({ "api": [
             "group": "Success 200",
             "type": "Number",
             "optional": false,
-            "field": "next_query",
+            "field": "next",
             "description": "<p>next query internal/seconds.</p>"
           },
           {
             "group": "Success 200",
             "type": "Number",
             "optional": false,
-            "field": "mode",
-            "description": "<p>att mode 1 manual, 0 auto.</p>"
-          },
-          {
-            "group": "Success 200",
-            "type": "Object",
-            "optional": true,
-            "field": "manual",
-            "description": "<p>manual mode step.</p>"
+            "field": "att_aim",
+            "description": "<p>target snr/db.</p>"
           },
           {
             "group": "Success 200",
             "type": "Number",
             "optional": false,
-            "field": "manual.target",
-            "description": "<p>manual target.</p>"
+            "field": "att_step",
+            "description": "<p>att step/db.</p>"
           },
           {
             "group": "Success 200",
             "type": "Number",
             "optional": false,
-            "field": "manual.step",
-            "description": "<p>manual step.</p>"
-          },
-          {
-            "group": "Success 200",
-            "type": "Number",
-            "optional": false,
-            "field": "manual.step_time",
-            "description": "<p>manual step time.</p>"
+            "field": "att_inv",
+            "description": "<p>att interval/seconds.</p>"
           }
         ]
       },
       "examples": [
         {
-          "title": "Success-Response-1:",
-          "content": "HTTP/1.1 200 OK\n{\n  \"att\": 5,\n  \"next_query\": 5\n}",
-          "type": "json"
-        },
-        {
-          "title": "Success-Response-2:",
-          "content": "HTTP/1.1 200 OK\n{\n  \"att_inc\": 0.2,\n  \"next_query\": 5\n}",
-          "type": "json"
-        },
-        {
-          "title": "Success-Response-3:",
-          "content": "HTTP/1.1 200 OK\n{\n  \"next_query\": 5    //local < summsry, no need att\n}",
-          "type": "json"
-        },
-        {
-          "title": "Success-Response-man-mode:",
-          "content": "HTTP/1.1 200 OK\n{\n  \"next_query\": 5, \n  \"manual\": {\n     target: 3,\n     step: 0.25,\n     step_time: 5 \n  } \n}",
+          "title": "Success-Response-ok:",
+          "content": "HTTP/1.1 200 OK\n{\n  \"next\": 10, \n  \"att_aim\": 3,\n  \"att_step\": 0.25,\n  \"att_inv\": 5\n}",
           "type": "json"
         },
         {
           "title": "Success-Response-sleep:",
-          "content": "HTTP/1.1 200 OK\n{\n  \"next_query\": 3600    \n}",
+          "content": "HTTP/1.1 200 OK\n{\n  \"next\": 3600    \n}",
           "type": "json"
         },
         {
           "title": "Success-Response-no-data:",
-          "content": "HTTP/1.1 200 OK\n{\n  \"err\": \"no data\",           \n  \"next_query\": 5\n}",
+          "content": "HTTP/1.1 200 OK\n{\n  \"err\": \"no data\",           \n  \"next\": 5\n}",
           "type": "json"
         }
       ]

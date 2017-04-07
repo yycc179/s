@@ -145,12 +145,12 @@ router.get('/location', (req, res, next) => {
  * @apiParam {String} m mac address
  * @apiSampleRequest off
  * 
- * @apiSuccess {Number} next_update next update interval/seconds
+ * @apiSuccess {Number} next next update interval/seconds
  * 
  * @apiSuccessExample Success-Response:
  *     HTTP/1.1 200 OK
  *     {
- *       "next_update": 3600
+ *       "next": 3600
  *     }
  *
  * @apiUse NotFoundError
@@ -182,74 +182,45 @@ router.post('/update', (req, res, next) => {
                 res.status(401).json({ err: 'config first' })
             }
             else {
-                res.json({ next_update: parseInt(value) })
+                res.json({ next: parseInt(value) })
             }
         })
         .catch(e => next(e))
-
 })
 
 /**
  * @api {get} /query get attenuation
  * @apiName getAtt
  * @apiGroup QOS
- * @apiParam {Number} l l snr value
- * @apiParam {String} m l mac address
+ * @apiParam {Number} l local snr value
+ * @apiParam {String} m mac address
  *
- * @apiSuccess {Number} [att]  attenuation snr.
- * @apiSuccess {Number} [att_inc]  attenuation inc snr.
  * @apiSuccess {String} [err]  err info.
- * @apiSuccess {Number} next_query  next query internal/seconds.
- * @apiSuccess {Number} mode  att mode 1 manual, 0 auto.
- * 
- * 
- * @apiSuccess {Object} [manual] manual mode step.
- * @apiSuccess {Number} manual.target manual target.
- * @apiSuccess {Number} manual.step manual step.
- * @apiSuccess {Number} manual.step_time manual step time.
- * 
- * @apiSuccessExample Success-Response-1:
- *     HTTP/1.1 200 OK
- *     {
- *       "att": 5,
- *       "next_query": 5
- *     }
+ * @apiSuccess {Number} next  next query internal/seconds.
+ * @apiSuccess {Number} att_aim target snr/db.
+ * @apiSuccess {Number} att_step att step/db.
+ * @apiSuccess {Number} att_inv att interval/seconds.
  *  
- *  @apiSuccessExample Success-Response-2:
+ *  @apiSuccessExample Success-Response-ok:
  *     HTTP/1.1 200 OK
  *     {
- *       "att_inc": 0.2,
- *       "next_query": 5
- *     }
- *
- *  @apiSuccessExample Success-Response-3:
- *     HTTP/1.1 200 OK
- *     {
- *       "next_query": 5    //l < summsry, no need att
- *     }
- * 
- *  @apiSuccessExample Success-Response-man-mode:
- *     HTTP/1.1 200 OK
- *     {
- *       "next_query": 5, 
- *       "manual": {
- *          target: 3,
- *          step: 0.25,
- *          step_time: 5 
- *       } 
+ *       "next": 10, 
+ *       "att_aim": 3,
+ *       "att_step": 0.25,
+ *       "att_inv": 5
  *     }
  * 
  *  @apiSuccessExample Success-Response-sleep:
  *     HTTP/1.1 200 OK
  *     {
- *       "next_query": 3600    
+ *       "next": 3600    
  *     }
  *
  *  @apiSuccessExample Success-Response-no-data:
  *     HTTP/1.1 200 OK
  *     {
  *       "err": "no data",           
- *       "next_query": 5
+ *       "next": 5
  *     }
  * 
  * @apiUse NotFoundError
@@ -271,10 +242,12 @@ router.get('/query', (req, res, next) => {
     }
 
     let config;
+    let qos;
     Promise.join(client.hgetallAsync('config'),
-        Qos.findOneAndUpdate({ mac: m }, { local: l }).exec(),
+        Qos.findOneAndUpdate({ mac: m }, { snr_local: l }).exec(),
         (obj, doc) => {
             config = obj;
+            qos = doc;
             var city = doc && doc.city;
             if (!city) {
                 var e = new Error('config first');
@@ -282,8 +255,9 @@ router.get('/query', (req, res, next) => {
                 return Promise.reject(e);
             }
 
-            if (!doc.auto) {
-                res.json({ next_query: config.next_query, manual: doc.manual })
+            if (doc.manual) {
+                const { att_aim, att_inv, att_step } = doc;
+                res.json({ next: parseInt(config.next_query), att_aim, att_inv, att_step })
                 return Promise.reject();
             }
 
@@ -291,8 +265,7 @@ router.get('/query', (req, res, next) => {
                 {
                     $match: {
                         city: ObjectId(city),
-                        updatedAt: getUpdatedAt(config.valid_time), 
-                        snr: { $gt: SNR_MIN },
+                        updatedAt: getUpdatedAt(config.valid_time),
                     }
                 },
                 { $sort: { updatedAt: -1 } },
@@ -302,22 +275,22 @@ router.get('/query', (req, res, next) => {
             ]).sort('snr').exec()
         })
         .then(docs => {
-            const next_query = parseInt(config.next_query);
+            const next = parseInt(config.next_query);
 
             if (!docs.length) {
-                return res.json({ err: 'no data', next_query })
+                return res.json({ err: 'no data', next })
             }
             const { snr } = docs[parseInt(docs.length * config.factor)];
 
-            var obj = { next_query };
-            if (l > snr && config.att_alg == 1) {
-                obj.att = Number(((l - snr) / 2).toFixed(2));
-            }
-            else if (config.att_alg == 2) {
-                obj.att_inc = Number(config.att_step);
-            }
-
-            res.json(obj)
+            // var obj = { next };
+            // if (l > snr && config.att_alg == 1) {
+            //     obj.att = Number(((l - snr) / 2).toFixed(2));
+            // }
+            // else if (config.att_alg == 2) {
+            //     obj.att_inc = Number(config.att_step);
+            // }
+            const { att_inv, att_step } = qos;
+            res.json({ next, att_aim: snr, att_inv, att_step })
         })
         .catch(e => {
             if (e) next(e)

@@ -68,20 +68,37 @@
     <script type="text/babel" src="/javascripts/common.js"></script>
 
     <script type="text/babel">
+
+        function randommac(size=12) {
+            var code_string = "ABCDEF0123456789";
+            var max_num = code_string.length + 1;
+            var string = '';
+            while (size > 0) {
+                string += code_string.charAt(Math.floor(Math.random() * max_num));
+                size--;
+            }
+            return string;
+        };
+
         $('#btn_add').click(function() {
             var snr = (Math.random() * 30).toFixed(2);
+            var mac = randommac();
             var ip =  '10.' + parseInt(snr) + '.' + (Math.random() * 250).toFixed(2)
             
-            var params = {index: 0, row:{ip, snr, edit: true}}
+            var params = {index: 0, row:{ip, snr, mac, new: true}}
             $('#table').bootstrapTable('insertRow', params);
         })
 
         $('#btn_save').click(function() {
             var all = $('#table').bootstrapTable('getData');
-            var edit = all.filter(i => i.edit)
+            var edit = all.filter(i => i.edit || i.new)
             if(!edit.length) {
                 return alert('Nothing change!')
             }
+            edit.map(d => {
+                delete d.edit;
+                delete d.new
+            })
             $('#table').bootstrapTable('showLoading');
             $.ajax({
                 type: "post",
@@ -117,10 +134,13 @@
                 toolbar: '#toolbar', 
                 toolbarAlign: 'right',
                 striped: true,
+                sortName: 'updatedAt',
+                sortOrder: 'desc',
+                sortable:true,
                 pagination: true,
                 sidePagination: "server",
                 pageSize: 10,
-                idField : 'ip',
+                idField : 'mac',
                 onEditableSave: function(field, row, oldValue) {
                     row.edit = row[field] !== oldValue;
                 },
@@ -171,6 +191,27 @@
                     align: 'center',
                     formatter: function (value, row, index) {
                         return new Date(Date.parse(value)).toLocaleString()
+                    }
+                }, {
+                    field: 'operate',
+                    title: 'Operate',
+                    align: 'center',
+                    formatter: function (value, row, index) {
+                        return "<a class='remove' href=javascript:void(0) title='Remove'><i class='glyphicon glyphicon-remove'></i></a>"
+                    },
+                    events:{
+                        'click .remove':function(e, value, row, index) {
+                            if(!row.new) {
+                                $.post(`/api/mock/remove/${current}/${row.mac}`, function() {
+                                    request_graphic(current);
+                                    request_summary(current);
+                                })
+                            } 
+                            $('table').bootstrapTable('remove', {
+                                field: 'mac',
+                                values: [row.mac]
+                            });
+                        }
                     }
                 }],
             });

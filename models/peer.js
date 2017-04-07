@@ -3,17 +3,18 @@ const Schema = db.Schema;
 
 const schema = Schema({
     mac: { type: String, index: true, unique: true },
-    ip: { type: String },    
+    ip: { type: String },
     city: { type: Schema.Types.ObjectId, index: true, ref: 'city' },
     snr: Number,
-    times: {type: Number, default: 0},
+    times: { type: Number, default: 0 },
 }, {
         versionKey: false,
         timestamps: true
     }
 );
 
-schema.index({ city: 1, snr: 1, updatedAt: -1 })
+schema.index({ updatedAt: -1, city: 1 })
+schema.index({ snr: 1, city: 1, updatedAt: 1 })
 
 schema.plugin(require('mongoose-paginate'));
 

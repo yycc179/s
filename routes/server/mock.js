@@ -14,13 +14,22 @@ router.post('/remove/:city', (req, res, next) => {
     )
 });
 
+router.post('/remove/:city/:mac', (req, res, next) => {
+    const { city, mac } = req.params;
+    Promise.join(City.findOneAndUpdate({ city }, { $inc: { peer: -1 } }).exec(),
+        Peer.remove({ mac }).exec(), () => {
+            res.json({ ok: 1 })
+        }
+    )
+});
+
 router.post('/save/:city', (req, res, next) => {
     const { city } = req.params;
     var promise = [];
     var new_data = [];
     req.body.forEach(d => {
         if (d.updatedAt) {
-            promise.push(Peer.findOneAndUpdate({ ip: d.ip }, {snr: d.snr, $inc: {times: 1}}).exec())
+            promise.push(Peer.findOneAndUpdate({mac: d.mac}, {ip: d.ip, snr: d.snr, $inc: {times: 1}}).exec())
         }
         else {
             d.city = ObjectId(city);

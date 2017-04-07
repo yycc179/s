@@ -37,17 +37,6 @@
       <h2><span class='text-primary'>Qos</span></h2>
 
       <div class="form-group">
-        <label class="col-sm-2 control-label"></label>
-        <div class="col-sm-5">
-          <div class="checkbox">
-            <label>
-          <input type="checkbox" name='sleep' disabled>Enable sleep function(not implement)
-          </label>
-          </div>
-        </div>
-      </div>
-
-      <div class="form-group">
         <label for="query" class="col-sm-2 control-label">Query period</label>
         <div class="col-sm-5">
           <select class="form-control" id='query' name='next_query'></select>
@@ -69,21 +58,6 @@
       </div>
 
       <div class="form-group">
-        <label class="col-sm-2 control-label">Attenuation algorithm</label>
-        <div class="col-sm-5">
-          <select class="form-control" id='att_alg' name='att_alg'></select>
-        </div>
-      </div>
-
-      <div class="form-group" id='step' <%=config.att_alg==1? "hidden" : "" %>>
-        <label for="inputEmail3" class="col-sm-2 control-label">Step(db)</label>
-        <div class="col-sm-5">
-          <input type="number" class="form-control" name="att_step" min="0.25" max="2" step="0.25" value="<%=config.att_step%>" <%=config.att_alg==1?
-            "disabled" : "" %>>
-        </div>
-      </div>
-
-      <div class="form-group">
         <div class="col-sm-offset-2 col-sm-5">
           <button type="submit" class="btn btn-default"><span class='text-primary'>Submit</span></button>
         </div>
@@ -98,7 +72,6 @@
   </div>
 
   <script src="//oss.maxcdn.com/jquery.form/3.50/jquery.form.min.js"></script>
-  <!--<script src="https://unpkg.com/babel-standalone@6/babel.js"></script>-->
   <script src="//cdn.bootcss.com/babel-standalone/6.23.1/babel.min.js"></script>
   <script type="text/babel" src="/javascripts/common.js"></script>
 
@@ -113,7 +86,6 @@
     ].forEach(data => select_draw('#update', data, <%=config.next_update %>));
 
     [
-      [5, "5 Seconds"],
       [10, "10 Seconds"],
       [20, "20 Seconds"],
       [30, "30 Seconds"],
@@ -141,12 +113,6 @@
       [2, "Step by step"],
     ].forEach(data => select_draw('#att_alg', data, <%=config.att_alg %>));
 
-
-    $('#att_alg').change(e => {
-      var s = $('#step').attr('hidden');
-      $('#step').attr('hidden', !s)
-      $('#step input').attr('disabled', !s)
-    })
     function postData() {
       $(this).ajaxSubmit({
         url: '/web/setting',

@@ -4,12 +4,8 @@
 
         <table class="table">
             <caption>
-                <div class="loading pull-left">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                    <span></span>
+                <div id='info' class="alert alert-success" role="alert" hidden=true>
+                    Settting success!
                 </div>
             </caption>
             <thead>
@@ -18,17 +14,17 @@
                     <th>Location</th>
                     <th>Mac Address </th>
                     <th>IP Address </th>
-                    <th>Manual mode</th>
                     <th>Local(db)</th>
-                    <th>target(db)</th>
-                    <th>step(db)</th>
-                    <th>step time(s)</th>
+                    <th>Manual mode</th>
+                    <th>Target(db)</th>
+                    <th>Step(db)</th>
+                    <th>Step time(s)</th>
                     <th>Submit</th>
                 </tr>
             </thead>
 
             <tbody>
-                <% datas.forEach(function(data, i){ var man = data.manual%>
+                <% datas.forEach(function(data, i){%>
                     <tr>
                         <th scope="row">
                             <%=i%>
@@ -43,69 +39,76 @@
                         <td>
                             <%=data.ip%>
                         </td>
-                        <td>
-                            <input id="checkbox_<%=i%>" type="checkbox" <%=!data.auto ? "checked": ""%>>
-                        </td>
                         <td id='<%=data._id%>'>
-                            <%=data.local%>
+                            <%=data.snr_local%>
                         </td>
                         <td>
-                            <input type="number" class="form-control input_<%=i%>" name="target" min="0" max="30" step="0.5" value=<%=man?man.target:3%>
-                            <%=data.auto?"disabled":""%>>
+                            <input id="checkbox_<%=i%>" type="checkbox" <%=data.manual ? "checked": ""%>>
                         </td>
                         <td>
-                            <input type="number" class="form-control input_<%=i%>" name="step" min="0.25" max="2" step="0.25" value=<%=man?man.step:0.25%>
-                            <%=data.auto?"disabled":""%>>
+                            <input type="number" id='att_target_<%=i%>' class="form-control input_<%=i%>" name="att_aim" min="1" max="30" step="0.5"
+                                value=<%=data.att_aim%>
+                            <%=data.manual?"":"disabled"%>>
                         </td>
                         <td>
-                            <input type="number" class="form-control input_<%=i%>" name="step_time" min="1" max="5" step="1" value=<%=man?man.step_time:5%>
-                            <%=data.auto ?"disabled":""%>>
+                            <input type="number" class="form-control input_<%=i%>" name="att_step" min="0.25" max="3" step="0.25" value=<%=data.att_step%>
+
                         </td>
                         <td>
-                            <button id="submit_<%=i%>" type="submit" class="btn btn-default glyphicon glyphicon-ok pull-right" value="<%=data._id%>"></button>
+                            <input type="number" class="form-control input_<%=i%>" name="att_inv" min="5" max="30" step="1" value=<%=data.att_inv%>
+                        </td>
+                        <td>
+                            <button type="button" id="submit_<%=i%>_<%=data._id%>" class="btn btn-default pull-right"><a  href=javascript:void(0)><i class='glyphicon glyphicon-ok'></i></a></button>
                         </td>
                     </tr>
                     <% })%>
             </tbody>
         </table>
+        <div class="loading pull-left">
+            <div><span></span></div>
+            <div><span></span></div>
+            <div><span></span></div>
+        </div>
     </div>
 
     <script>
         $('input[type=checkbox]').change(e => {
             var id = e.target.id.split('_')[1];
-            $('.input_' + id).attr('disabled', !e.target.checked)
+            $('#att_target_' + id).attr('disabled', !e.target.checked)
         })
 
         $('button').click(function (e) {
-            var id = e.target.id.split('_')[1];
+            var id = this.id.split('_');
             var obj = {
-                auto: $('#checkbox_' + id).is(':checked') ? false : true
+                manual: $('#checkbox_' + id[1]).is(':checked')
             }
-            if (!obj.auto) {
-                var manual = {}
-                for (one of $('.input_' + id)) {
-                    manual[one.name] = one.value;
-                }
-                obj.manual = manual;
+
+            for (one of $('.input_' + id[1])) {
+                obj[one.name] = one.value;
             }
 
             $.ajax({
                 type: "post",
-                url: '/web/qos/' + this.value,
+                url: '/web/qos/' + id[2],
                 data: JSON.stringify(obj),
                 contentType: "application/json",
                 dataType: 'json',
                 error: () => alert('setting fail!'),
-                success: () => alert('ok!')
+                success: () => {
+                    $('#info').slideDown();
+                    setTimeout(() => $('#info').fadeOut(), 1000)
+                }
             });
         })
 
         setInterval(function () {
-            // $('#loading').removeClass('hidden')
+            // $('.loading').removeClass('hidden')
+            // setTimeout(function () {
+            //     $('.loading').addClass('hidden')
+            // }, 1000)
             $.getJSON('/web/qos/local', datas => {
                 for (one of datas) {
-                    $('#' + one._id).text(one.local)
-                    // $('#loading').addClass('hidden')
+                    $('#' + one._id).text(one.snr_local)
                 }
             })
         }, 5000)
@@ -113,50 +116,75 @@
 
     <style>
         .loading {
-            width: 150px;
-            height: 15px;
+            width: 60px;
+            height: 60px;
             margin: 0 auto;
+            /*margin-top: 100px;*/
             position: relative;
+            -webkit-animation: load 3s linear infinite;
+        }
+        
+        .loading div {
+            width: 100%;
+            height: 100%;
+            position: absolute;
         }
         
         .loading span {
-            position: absolute;
-            width: 15px;
-            height: 100%;
+            display: inline-block;
+            width: 20px;
+            height: 20px;
             border-radius: 50%;
-            background: lightgreen;
-            -webkit-animation: load 1.04s ease-in infinite alternate;
+            background: #99CC66;
+            position: absolute;
+            left: 50%;
+            margin-top: -10px;
+            margin-left: -10px;
+            -webkit-animation: changeBgColor 3s ease infinite;
         }
         
         @-webkit-keyframes load {
             0% {
-                opacity: 1;
-                -webkit-transform: translate(0px);
+                -webkit-transform: rotate(0deg);
+            }
+            33.3% {
+                -webkit-transform: rotate(120deg);
+            }
+            66.6% {
+                -webkit-transform: rotate(240deg);
             }
             100% {
-                opacity: 0.2;
-                -webkit-transform: translate(150px);
+                -webkit-transform: rotate(360deg);
             }
         }
         
-        .loading span:nth-child(1) {
-            -webkit-animation-delay: 0.13s;
+        @-webkit-keyframes changeBgColor {
+            0%,
+            100% {
+                background: #99CC66;
+            }
+            33.3% {
+                background: #FFFF66;
+            }
+            66.6% {
+                background: #FF6666;
+            }
         }
         
-        .loading span:nth-child(2) {
-            -webkit-animation-delay: 0.26s;
+        .loading div:nth-child(2) {
+            -webkit-transform: rotate(120deg);
         }
         
-        .loading span:nth-child(3) {
-            -webkit-animation-delay: 0.39s;
+        .loading div:nth-child(3) {
+            -webkit-transform: rotate(240deg);
         }
         
-        .loading span:nth-child(4) {
-            -webkit-animation-delay: 0.52s;
+        .loading div:nth-child(2) span {
+            -webkit-animation-delay: 1s;
         }
         
-        .loading span:nth-child(5) {
-            -webkit-animation-delay: 0.65s;
+        .loading div:nth-child(3) span {
+            -webkit-animation-delay: 2s;
         }
     </style>
     <%include footer%>

@@ -133,7 +133,7 @@ describe('Back-end', () => {
                 .end((err, res) => {
                     if (err) return done(err);
                     res.body.should.not.have.property('err');
-                    res.body.next_update.should.be.a.Number;
+                    res.body.next.should.be.a.Number;
                     done();
                 })
         })
@@ -176,7 +176,7 @@ describe('Back-end', () => {
                 .expect(404, done)
         })
 
-        it('att algorithm 1, high l parameter, res json 200 with att and next_query', function (done) {
+        it('auto mode, should res json 200', function (done) {
             request.get('/api/query')
                 .query({ l: 25 })
                 .query({ m: '123' })
@@ -185,61 +185,21 @@ describe('Back-end', () => {
                 .end((err, res) => {
                     if (err) return done(err);
                     res.body.should.not.have.key('err');
-                    res.body.att.should.be.a.Number;
-                    res.body.next_query.should.be.a.Number;
+                    res.body.next.should.be.a.Number;
+                    res.body.att_aim.should.be.a.Number;
+                    res.body.att_step.should.be.a.Number;
+                    res.body.att_inv.should.be.a.Number;
                     done();
                 })
         })
 
-        it('low l parameter, res json 200 with no snr but next_query', function (done) {
-            request.get('/api/query')
-                .query({ l: 10 })
-                .query({ m: '123' })
-                .expect('Content-Type', /json/)
-                .expect(200)
-                .end((err, res) => {
-                    if (err) return done(err);
-                    res.body.should.not.have.key('err');
-                    res.body.should.not.have.key('att');
-                    res.body.next_query.should.be.a.Number;
-                    done();
-                })
-        })
-
-        it('att algorithm 2, should res json with att_inc key', function (done) {
-            client.hset('config', 'att_alg', 2, e => {
-                if (e) return done(e);
-
-                request.get('/api/query')
-                    .query({ l: 25 })
-                    .query({ m: '123' })
-                    .expect('Content-Type', /json/)
-                    .expect(200)
-                    .end((err, res) => {
-                        if (err) return done(err);
-                        res.body.should.not.have.key('err');
-                        res.body.next_query.should.be.a.Number;
-                        client.hget('config', 'att_step', (e, v) => {
-                            if (e) return done(e);
-                            res.body.att_inc.should.be.exactly(Number(v))
-                            done();
-                        })
-
-                    })
-            })
-
-        })
-
+        var body = {
+            manual: true,
+            att_aim: 5,
+        }
         it('set manual mode, should res ok', function (done) {
             Qos.findOne().then(doc => {
-                var body = {
-                    auto: false,
-                    manual: {
-                        target: 3,
-                        step: 0.25,
-                        step_time: 5,
-                    }
-                }
+                console.log(doc)
                 request.post('/web/qos/' + doc._id)
                     .query({ l: 25 })
                     .query({ m: '123' })
@@ -249,7 +209,7 @@ describe('Back-end', () => {
         })
 
 
-        it('mamnual mode query, res json 200 with manual object', function (done) {
+        it('mamnual mode, should res json 200', function (done) {
             request.get('/api/query')
                 .query({ l: 10 })
                 .query({ m: '123' })
@@ -258,14 +218,10 @@ describe('Back-end', () => {
                 .end((err, res) => {
                     if (err) return done(err);
                     res.body.should.not.have.key('err');
-                    res.body.should.not.have.key('att');
-                    res.body.next_query.should.be.a.Number;
-                    res.body.manual.should.be.an.Object;
-                    var manual = res.body.manual;
-                    manual.target.should.be.a.Number;
-                    manual.step.should.be.a.Number;
-                    manual.step_time.should.be.a.Number;
-
+                    res.body.next.should.be.a.Number;
+                    res.body.att_aim.should.be.eql(body.att_aim);
+                    res.body.att_step.should.be.a.Number;
+                    res.body.att_inv.should.be.a.Number;
                     done();
                 })
         })

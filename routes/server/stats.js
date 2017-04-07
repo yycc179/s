@@ -37,7 +37,7 @@ router.get('/snr/summary/:city', (req, res, next) => {
         {
             $match: {
                 city: ObjectId(req.params.city),
-                snr: { $gt: SNR_MIN },
+                // snr: { $gt: SNR_MIN },
                 updatedAt: getUpdatedAt(req.query.t)
             }
         },
@@ -77,7 +77,7 @@ router.get('/snr/json/:city', (req, res, next) => {
         limit: parseInt(req.query.limit)
     };
 
-    Peer.paginate({ city: req.params.city },
+    Peer.paginate({ city: req.params.city},
         options, function (err, result) {
             if (err) return next(err)
             result.rows = result.docs;
