@@ -19,10 +19,9 @@ router.get('/snr/city/:city', (req, res, next) => {
             .where('snr').gt(j).lte(end)
             .count().exec()])
     }
-
     let data = [];
     Promise.reduce(ar_group,
-        (total, [key, p]) => p.then(count => data.push([key, count])))
+        (total, [key, p]) => p.then(count => data.push([key, count])),  0)
         .then(() => {
             data.sort((a, b) => {
                 return a[0] - b[0];

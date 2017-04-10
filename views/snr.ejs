@@ -161,7 +161,7 @@
                         mode: 'inline',
                         validate: function (v) {
                             if (isNaN(v)) return 'Should be a number';
-                            if (v <= 0 || v > 30) return 'input 0 - 30';
+                            if (v < -2.5 || v > 30) return 'input -2.5 - 30';
                         }
                     },
                     cellStyle: function (value, row, index, field) {
@@ -232,7 +232,7 @@
                     axes: {
                         xaxis: {
                             label: "SNR(db)",
-                            renderer: $.jqplot.CategoryAxisRenderer,
+                            labelRenderer: $.jqplot.CanvasAxisLabelRenderer
                         },
                         yaxis: {
                             label: "Peer number",

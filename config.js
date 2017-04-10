@@ -11,5 +11,5 @@ exports = module.exports = {
 
     SNR_WEIGHT: 1,
     SNR_MAX: 30,
-    SNR_MIN: 0,
+    SNR_MIN: -3,
 }
