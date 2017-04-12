@@ -5,9 +5,10 @@ const router = require('express').Router()
 
 function setStatus(docs, next_query) {
     var now = new Date();
-    now.setSeconds(now.getSeconds() - next_query);
+    now.setSeconds(now.getSeconds() - next_query - 5);
     docs.map(d => {
-        d.status = d.updatedAt > now ? 'active' : 'inactive'
+        d.status = d.updatedAt > now ? 'active' : 'inactive';
+        delete d.updatedAt
     })
 }
 
