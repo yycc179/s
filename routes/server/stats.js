@@ -2,20 +2,19 @@ const router = require('express').Router()
     , Promise = require("bluebird")
     , ObjectId = require('mongoose').Types.ObjectId
     , { getUpdatedAt } = require('./utils')
-    , Peer = require('../../models/peer')
-    , City = require('../../models/city');
+    , Peer = require('../../models/peer');
 
 const { SNR_MAX, SNR_MIN, SNR_WEIGHT } = require('../../config')
 
 
-router.get('/snr/city/:city', (req, res, next) => {
-    const { city } = req.params;
+router.get('/snr/country/:loc', (req, res, next) => {
+    const { loc } = req.params;
     const ar_group = [];
     const updatedAt = getUpdatedAt(req.query.t);
 
     for (var j = SNR_MIN; j < SNR_MAX; j += SNR_WEIGHT) {
         var end = j + SNR_WEIGHT
-        ar_group.push([end, Peer.find({ city, updatedAt})
+        ar_group.push([end, Peer.find({ loc, updatedAt})
             .where('snr').gt(j).lte(end)
             .count().exec()])
     }
@@ -31,13 +30,13 @@ router.get('/snr/city/:city', (req, res, next) => {
 });
 
 
-router.get('/snr/summary/:city', (req, res, next) => {
+router.get('/snr/summary/:loc', (req, res, next) => {
     Peer.aggregate([
         {
             $match: {
-                city: ObjectId(req.params.city),
-                // snr: { $gt: SNR_MIN },
-                updatedAt: getUpdatedAt(req.query.t)
+                loc: ObjectId(req.params.loc),
+                updatedAt: getUpdatedAt(req.query.t),
+                snr: { $gt: SNR_MIN },
             }
         },
         { $sort: { updatedAt: -1 } },
@@ -60,7 +59,7 @@ router.get('/snr/summary/:city', (req, res, next) => {
 
 });
 
-router.get('/snr/json/:city', (req, res, next) => {
+router.get('/snr/json/:loc', (req, res, next) => {
     if (req.query.sort) {
         var sort = {
             [req.query.sort]: req.query.order == 'asc' ? 1 : -1
@@ -76,7 +75,7 @@ router.get('/snr/json/:city', (req, res, next) => {
         limit: parseInt(req.query.limit)
     };
 
-    Peer.paginate({ city: req.params.city},
+    Peer.paginate({ loc: req.params.loc},
         options, function (err, result) {
             if (err) return next(err)
             result.rows = result.docs;

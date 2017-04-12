@@ -9,12 +9,11 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-sm-9 col-md-2 sidebar">
-                <ul class="nav nav-sidebar" id='city'>
-                    <% cities.forEach((city, i) => { %>
-                        <li value="<%=city._id%>" <%=i==0 ? "class=active" : '' %>>
+                <ul class="nav nav-sidebar" id='loc'>
+                    <% datas.forEach((data, i) => { %>
+                        <li value="<%=data._id%>" <%=i==0 ? "class=active" : '' %>>
                             <a>
-                                <%=city.country%>-
-                                    <%=city.city%>
+                                <%=data.name%>
                             </a>
                         </li>
                         <% })%>
@@ -127,10 +126,10 @@
             })
         })
 
-        function refresh_table(city) {
+        function refresh_table(loc) {
             $('#table').bootstrapTable('destroy');
             $('#table').bootstrapTable({
-                url: "/api/stats/snr/json/" + city,
+                url: "/api/stats/snr/json/" + loc,
                 toolbar: '#toolbar', 
                 toolbarAlign: 'right',
                 striped: true,
@@ -217,8 +216,8 @@
             });
         }
 
-        function request_graphic(city, time = $('#ef_time').val()) {
-            $.getJSON(`/api/stats/snr/city/${city}?t=${time}`, data => {
+        function request_graphic(loc, time = $('#ef_time').val()) {
+            $.getJSON(`/api/stats/snr/country/${loc}?t=${time}`, data => {
                 console.log("done")
                 var plot1 = $.jqplot('graphic', [data], {
                     title: 'SNR distribution',
@@ -246,8 +245,8 @@
             })
         }
 
-        function request_summary(city, time = $('#ef_time').val()) {
-            $.getJSON(`/api/stats/snr/summary/${city}?t=${time}`, data => {
+        function request_summary(loc, time = $('#ef_time').val()) {
+            $.getJSON(`/api/stats/snr/summary/${loc}?t=${time}`, data => {
                 $.jqplot('summary', [data], {
                     title: 'Summary(x peer < y)',
                     seriesDefaults: {
@@ -285,14 +284,14 @@
             [0, "All"],
         ].forEach(data => select_draw('#ef_time', data, <%=time %>));
 
-        var current = "<%=cities.length ? cities[0]._id : undefined %>";
+        var current = "<%=datas.length ? datas[0]._id : undefined %>";
 
         if (current) {
             request_graphic(current);
             request_summary(current);
             refresh_table(current);
 
-            $("#city").children().click(function (e) {
+            $("#loc").children().click(function (e) {
         
                 current = $(this).attr('value')
                 $(this).siblings().removeClass('active');

@@ -2,13 +2,14 @@ const router = require('express').Router()
     , Admin = require('../../models/admin')
     , Join = require("bluebird").join
     , client = require('../../models/settings')
+    , Country = require('../../models/country')
     , City = require('../../models/city');
 
 router.get('/snr', (req, res) => {
-    Join(City.find().sort({ peer: -1 }).exec(),
+    Join(Country.find().sort({ name: 1 }).exec(),
         client.hgetAsync('config', 'valid_time'),
-        (cities, time) => {
-            res.render('snr', { title: 'snr', user: req.user, cities, time });
+        (datas, time) => {
+            res.render('snr', { title: 'snr', user: req.user, datas, time });
         })
        .catch(e => next(e))
 });
@@ -39,7 +40,7 @@ router.get('/peer/:country', (req, res, next) => {
     const { country } = req.params;
     City.aggregate([
         { $match: { country } },
-        { $group: { _id: '$city', count: { $sum: '$peer' } } },
+        { $group: { _id: '$name', count: { $sum: '$peer' } } },
         { $sort: { count: -1 } }])
         .limit(1000)
         .exec()

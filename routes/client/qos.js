@@ -1,12 +1,21 @@
 const router = require('express').Router()
+    , Promise = require('bluebird')
+    , client = require('../../models/settings')
     , Qos = require('../../models/qos');
 
+function setStatus(docs, next_query) {
+    var now = new Date();
+    now.setSeconds(now.getSeconds() - next_query);
+    docs.map(d => {
+        d.status = d.updatedAt > now ? 'active' : 'inactive'
+    })
+}
+
 router.get('/', (req, res, next) => {
-    Qos.find().sort('city').lean().exec()
-        .then(docs => {
-            return Qos.populate(docs, { path: 'city', select: '-_id city country' })
-        })
-        .then(datas => {
+    Promise.join(client.hgetAsync('config', 'next_query'),
+        Qos.find().sort('loc').lean().exec(),
+        (value, datas) => {
+            setStatus(datas, value)
             res.render('qos', {
                 title: 'qos',
                 user: req.user,
@@ -24,10 +33,14 @@ router.post('/:id', (req, res, next) => {
 });
 
 router.get('/local', (req, res, next) => {
-    Qos.find().select('snr_local').lean().exec((e, docs) => {
-        if (e) return next(e)
-        res.json(docs)
-    })
+    Promise.join(client.hgetAsync('config', 'next_query'),
+        Qos.find().sort('loc').select('snr_local updatedAt').lean().exec(),
+        (value, datas) => {
+            setStatus(datas, value)
+            res.json(datas)
+        })
+        .catch(e => next(e))
+
 });
 
 module.exports = router

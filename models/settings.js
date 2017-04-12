@@ -9,7 +9,6 @@ var dconfig = {
     next_query: 10, //10 secs
     valid_time: 60,  //60 mins
     factor: 0.2,  //20%
-    att_alg: 1, // 1 2
     att_step: 0.5 // 1 2
 };
 

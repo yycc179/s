@@ -14,6 +14,7 @@
                     <th>Location</th>
                     <th>Mac Address </th>
                     <th>IP Address </th>
+                    <th>Status</th>
                     <th>Local(db)</th>
                     <th>Manual mode</th>
                     <th>Target(db)</th>
@@ -30,8 +31,7 @@
                             <%=i%>
                         </th>
                         <td>
-                            <%=data.city.country%>-
-                                <%=data.city.city%>
+                            <%=data.loc_s%>
                         </td>
                         <td>
                             <%=data.mac%>
@@ -39,7 +39,10 @@
                         <td>
                             <%=data.ip%>
                         </td>
-                        <td id='<%=data._id%>'>
+                        <td id='st_<%=data._id%>'>
+                            <%=data.status%>
+                        </td>
+                        <td id='sn_<%=data._id%>'>
                             <%=data.snr_local%>
                         </td>
                         <td class="center-block">
@@ -102,13 +105,10 @@
         })
 
         setInterval(function () {
-            // $('.loading').removeClass('hidden')
-            // setTimeout(function () {
-            //     $('.loading').addClass('hidden')
-            // }, 1000)
             $.getJSON('/web/qos/local', datas => {
                 for (one of datas) {
-                    $('#' + one._id).text(one.snr_local)
+                    $('#st_' + one._id).text(one.status)
+                    $('#sn_' + one._id).text(one.snr_local)
                 }
             })
         }, 5000)

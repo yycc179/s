@@ -6,17 +6,15 @@ const schema = Schema({
     _id: { type: String, unique: true, default: require('shortid').generate },
     mac: { type: String, index: true, unique: true },
     ip: { type: String },
-    city: { type: Schema.Types.ObjectId, index: true, ref: 'city' },
+    loc: { type: Schema.Types.ObjectId, ref: 'country' },
+    loc_s: { type: String },
     snr_local: Number,
     att_aim: { type: Number, default: 3 },
     att_inv: { type: Number, default: 5 },
     att_step: { type: Number, default: 0.25 },
     manual: { type: Boolean, default: false },
-}, {
-        versionKey: false,
-        timestamps: true
-    }
-);
+    updatedAt: {type: Date, default: Date.now}
+});
 
 const Qos = db.model('qos', schema);
 

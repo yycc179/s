@@ -199,7 +199,6 @@ describe('Back-end', () => {
         }
         it('set manual mode, should res ok', function (done) {
             Qos.findOne().then(doc => {
-                console.log(doc)
                 request.post('/web/qos/' + doc._id)
                     .query({ l: 25 })
                     .query({ m: '123' })
@@ -229,19 +228,19 @@ describe('Back-end', () => {
 
 
     describe('GET stats', () => {
-        var city;
+        var loc;
         before(function (done) {
-            const City = require('../models/city')
+            const Country = require('../models/country')
 
-            City.findOne({}, (e, doc) => {
+            Country.findOne({}, (e, doc) => {
                 if (e) return done(e);
-                city = doc.id;
+                loc = doc.id;
                 done();
             })
         })
 
-        it('get /api/stats/snr/json/:city, res json 200', function (done) {
-            request.get('/api/stats/snr/json/' + city)
+        it('get /api/stats/snr/json/:loc, res json 200', function (done) {
+            request.get('/api/stats/snr/json/' + loc)
                 .expect('Content-Type', /json/)
                 .expect(200)
                 .end((err, res) => {
@@ -252,8 +251,8 @@ describe('Back-end', () => {
                 })
         })
 
-        it('get /api/stats/snr/city/:city, res json 200', function (done) {
-            request.get('/api/stats/snr/city/' + city)
+        it('get /api/stats/snr/country/:loc, res json 200', function (done) {
+            request.get('/api/stats/snr/country/' + loc)
                 .expect('Content-Type', /json/)
                 .expect(200)
                 .end((err, res) => {
@@ -265,7 +264,7 @@ describe('Back-end', () => {
 
 
         it('get /api/stats/snr/summary/:city, res json 200', function (done) {
-            request.get('/api/stats/snr/summary/' + city)
+            request.get('/api/stats/snr/summary/' + loc)
                 .expect('Content-Type', /json/)
                 .expect(200)
                 .end((err, res) => {

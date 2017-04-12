@@ -5,6 +5,7 @@ const router = require('express').Router()
     , request = require('request')
     , { getUpdatedAt } = require('./utils')
     , client = require('../../models/settings')
+    , Country = require('../../models/country')
     , City = require('../../models/city')
     , Qos = require('../../models/qos')
     , Peer = require('../../models/peer');
@@ -27,8 +28,11 @@ function queryCity(ip) {
     return new Promise((resolve, reject) => {
         request({ url: `http://ipinfo.io/${ip}/geo`, json: true }, (err, res, body) => {
             if (err) return reject('locate city failed, ip : ' + ip);
-
-            resolve({ city: body.region || body.city, country: body.country })
+            if (body.loc) {
+                var pos = body.loc.split(',')
+                body.ll = [Number(pos[0]), Number(pos[1])]
+            }
+            resolve(body)
         })
     })
 
@@ -86,45 +90,57 @@ router.get('/config', (req, res, next) => {
         valid: true
     }
 
-    let role = Peer;
+    let Mod = Peer;
+    let key = 'next_update';
     let inc = 1;
-    var key = 'next_update';
 
     if (!mac) {
         return next();
     }
     else if (t == 'q') {
-        role = Qos;
-        inc = 0;
+        Mod = Qos;
         key = 'next_query';
+        inc = 0;
     }
     else if (t != 'p') {
         return next();
     }
-
+    let role;
     Promise.join(client.hgetAsync('config', key),
-        role.findOne({ mac }).exec(), (value, doc) => {
+        Mod.findOne({ mac }).exec(), (value, doc) => {
             conf.period = parseInt(value);
-            if (doc && doc.city) return res.json(conf);
-            queryCity(ip)
-                .then(({ city = 'unknow', country = 'UNKNOW' }) => {
-                    return City.findOneAndUpdate({ city, country },
-                        { $inc: { peer: inc } },
-                        { upsert: true, new: true })
-                        .exec();
-                })
-                .then(city => {
-                    if (!doc) doc = new role({ mac, ip });
-                    doc.city = city._id;
-                    doc.save(e => {
-                        if (e) return next(e);
-                        res.json(conf);
-                    })
-                })
-                .catch(e => next(e))
+            if (!(role = doc)) role = new Mod({ mac, ip });
+            if (role.loc) {
+                res.json(conf);
+                return Promise.reject();
+            }
+            return queryCity(ip)
         })
-        .catch(e => next(e))
-
+        .then(data => {
+            const { country = 'UNKNOW' } = data;
+            Promise.join(Country.findOneAndUpdate({ name: country }, {},
+                { upsert: true, new: true })
+                .exec(),
+                City.findOneAndUpdate(
+                    { name: data.city || data.region || 'unknow', country, pos: data.ll },
+                    { $inc: { peer: inc } },
+                    { upsert: true, new: true })
+                    .exec(),
+                (con, city) => {
+                    role.loc = con._id;
+                    if (Mod == Qos) {
+                        role.loc_s = con.name + '-' + city.name
+                    }
+                    return role.save();
+                }
+            )
+        })
+        .then(() => {
+            res.json(conf);
+        })
+        .catch(e => {
+            if (e) next(e)
+        })
 });
 
 
@@ -244,12 +260,12 @@ router.get('/query', (req, res, next) => {
     let config;
     let qos;
     Promise.join(client.hgetallAsync('config'),
-        Qos.findOneAndUpdate({ mac: m }, { snr_local: l }).exec(),
+        Qos.findOneAndUpdate({ mac: m }, { snr_local: l, updatedAt: Date.now()}).exec(),
         (obj, doc) => {
             config = obj;
             qos = doc;
-            var city = doc && doc.city;
-            if (!city) {
+            var loc = doc && doc.loc;
+            if (!loc) {
                 var e = new Error('config first');
                 e.status = 401;
                 return Promise.reject(e);
@@ -264,8 +280,9 @@ router.get('/query', (req, res, next) => {
             return Peer.aggregate([
                 {
                     $match: {
-                        city: ObjectId(city),
+                        loc: ObjectId(loc),
                         updatedAt: getUpdatedAt(config.valid_time),
+                        snr: { $gt: SNR_MIN }
                     }
                 },
                 { $sort: { updatedAt: -1 } },
@@ -306,13 +323,13 @@ router.use(function (req, res, next) {
     next(err);
 })
 
-if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
+if (process.env.NODE_ENV !== 'production') {
     router.use(function (err, req, res, next) {
         res.status(err.status || 500);
         res.json({
             err: err.message,
             stack: err.stack
-        })
+        });
     });
 }
 
@@ -321,7 +338,8 @@ router.use(function (err, req, res, next) {
     res.status(err.status || 500);
     res.json({
         err: err.message,
-    });
+    })
 });
+
 
 module.exports = router;
