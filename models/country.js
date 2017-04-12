@@ -1,7 +1,6 @@
 const db = require('./db');
 
 const Schema = db.Schema({
-    _id: { type: String, unique: true, default: require('shortid').generate },
     name: { type: String, index: true, unique: true},
 })
 
