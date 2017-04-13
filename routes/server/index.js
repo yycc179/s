@@ -179,7 +179,9 @@ router.get('/location', (req, res, next) => {
  * 
  */
 router.post('/update', (req, res, next) => {
-    var snr = req.body.snr || req.body.pop().snr;
+    var body = req.body;
+    var snr = body.snr || (body.length && body.pop().snr);
+    
     if (snr == undefined || snr < SNR_MIN || snr > SNR_MAX) {
         return res.status(403).json({ err: 'invalid data' })
     }
