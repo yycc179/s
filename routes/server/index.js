@@ -179,13 +179,11 @@ router.get('/location', (req, res, next) => {
  * 
  */
 router.post('/update', (req, res, next) => {
-    var body = req.body;
-    const snr = body.length && body[body.length - 1].snr;
-    if (!snr || snr < SNR_MIN || snr > SNR_MAX) {
+    var snr = req.body.snr || req.body.pop().snr;
+    if (snr == undefined || snr < SNR_MIN || snr > SNR_MAX) {
         return res.status(403).json({ err: 'invalid data' })
     }
 
-    // const ip = getClientIp(req);
     var mac = req.query.m;
     if (!mac) {
         return next()
