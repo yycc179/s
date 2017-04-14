@@ -1,10 +1,9 @@
 <%include header%>
 
-
-    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.11.0/bootstrap-table.min.css">
-    <link href="//cdn.bootcss.com/x-editable/1.5.1/bootstrap-editable/css/bootstrap-editable.css" rel="stylesheet">
     <link rel="stylesheet" href="/stylesheets/dashboard.css">
-    <link rel="stylesheet" href="/stylesheets/jquery.jqplot.css">
+
+    <link href="//cdn.bootcss.com/bootstrap-table/1.11.1/bootstrap-table.min.css" rel="stylesheet">
+    <script src="//cdn.bootcss.com/bootstrap-table/1.11.1/bootstrap-table.min.js"></script>
 
     <div class="container-fluid">
         <div class="row">
@@ -21,26 +20,29 @@
             </div>
 
             <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-                <div class="row">
-                    <div id="graphic" class="col-md-4"></div>
-                    <div id="summary" class="col-md-4"></div>
+                <div class="row" style="height:300px">
+                    <div class="col-md-5">
+                        <canvas id="lineChart"></canvas>
+                    </div>
+                    <div class="col-md-4">
+                        <canvas id="barChart"></canvas>
+                    </div>
                     <div class="col-md-2">
                         <label for="ef_time" class="col-md-10 control-label">Effective time</label>
                         <select id='ef_time' class="form-control"></select>
                     </div>
                 </div>
-                <br>
                 <div class="row">
-                    <div id="toolbar" class="btn-group">
+                    <div id="toolbar" class="btn-group pull-right">
                         <button id="btn_add" type="button" class="btn btn-default">
                         <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>Add
                         </button>
                         <button id="btn_save" type="button" class="btn btn-default">
                         <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>Save
-                        </button> 
+                        </button>
                         <button id="btn_remove" type="button" class="btn btn-default">
                         <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>Remove
-                        </button>                           
+                        </button>
 
                     </div>
 
@@ -52,13 +54,7 @@
 
     <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.11.0/bootstrap-table.min.js"></script>
 
-    <script src="/javascripts/jquery.jqplot.min.js"></script>
-    <script src="/javascripts/plugins/jqplot.canvasTextRenderer.min.js"></script>
-    <script src="/javascripts/plugins/jqplot.canvasAxisLabelRenderer.min.js"></script>
-    <script src="/javascripts/plugins/jqplot.cursor.min.js"></script>
-    <script src="/javascripts/plugins/jqplot.pointLabels.min.js"></script>
-    <script src="/javascripts/plugins/jqplot.barRenderer.min.js"></script>
-    <script src="/javascripts/plugins/jqplot.categoryAxisRenderer.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.js"></script>
 
     <script src="/javascripts/bootstrap-table-editable.js"></script>
     <script src="/javascripts/bootstrap-editable.min.js"></script>
@@ -67,212 +63,248 @@
     <script type="text/babel" src="/javascripts/common.js"></script>
 
     <script type="text/babel">
+        Chart.plugins.register({
+            afterDatasetsDraw: function (chartInstance, easing) {
+                if (chartInstance.chart.config.type != 'bar') return
+                // To only draw at the end of animation, check for easing === 1
+                var ctx = chartInstance.chart.ctx;
+                chartInstance.data.datasets.forEach(function (dataset, i) {
+                    var meta = chartInstance.getDatasetMeta(i);
+                    if (!meta.hidden) {
+                        meta.data.forEach(function (element, index) {
+                            // Draw the text in black, with the specified font
+                            ctx.fillStyle = 'rgb(0, 0, 0)';
 
-        function randommac(size=12) {
-            var code_string = "ABCDEF0123456789";
-            var max_num = code_string.length + 1;
-            var string = '';
-            while (size > 0) {
-                string += code_string.charAt(Math.floor(Math.random() * max_num));
-                size--;
+                            var fontSize = 12;
+                            var fontStyle = 'normal';
+                            var fontFamily = 'Helvetica Neue';
+                            ctx.font = Chart.helpers.fontString(fontSize, fontStyle, fontFamily);
+
+                            // Just naively convert to string for now
+                            var dataString = dataset.data[index].toFixed(2);
+
+                            // Make sure alignment settings are correct
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+
+                            var padding = 5;
+                            var position = element.tooltipPosition();
+                            ctx.fillText(dataString, position.x, position.y - (fontSize / 2) - padding);
+                        });
+                    }
+                });
             }
-            return string;
-        };
+        });
 
-        $('#btn_add').click(function() {
-            var snr = (Math.random() * 30).toFixed(2);
-            var mac = randommac();
-            var ip =  '10.' + parseInt(snr) + '.' + (Math.random() * 250).toFixed(2)
-            
-            var params = {index: 0, row:{ip, snr, mac, new: true}}
-            $('#table').bootstrapTable('insertRow', params);
-        })
-
-        $('#btn_save').click(function() {
-            var all = $('#table').bootstrapTable('getData');
-            var edit = all.filter(i => i.edit || i.new)
-            if(!edit.length) {
-                return alert('Nothing change!')
-            }
-            edit.map(d => {
-                delete d.edit;
-                delete d.new
-            })
-            $('#table').bootstrapTable('showLoading');
-            $.ajax({
-                type: "post",
-                url: '/api/mock/save/'+ current,
-                data: JSON.stringify(edit),
-                contentType: "application/json",
-                dataType: 'json',
-                error: () => {$('#table').bootstrapTable('hideLoading'), alert('Save fail, may have duplicate data!')},
-                complete: function () {
-                    request_graphic(current);
-                    request_summary(current);
-                    refresh_table(current);
+        $('#table').bootstrapTable({
+            toolbar: '#toolbar',
+            toolbarAlign: 'right',
+            striped: true,
+            sortName: 'updatedAt',
+            sortOrder: 'desc',
+            sortable: true,
+            pagination: true,
+            sidePagination: "server",
+            pageSize: 10,
+            idField: 'mac',
+            onEditableSave: function (field, row, oldValue) {
+                row.edit = row[field] !== oldValue;
+            },
+            columns: [{
+                field: 'mac',
+                title: 'MAC Address',
+            }, {
+                field: 'ip',
+                title: 'IP Address',
+            }, {
+                field: 'snr',
+                title: 'SNR',
+                sortable: true,
+                align: 'center',
+                editable: {
+                    type: 'text',
+                    title: 'SNR',
+                    mode: 'inline',
+                    validate: function (v) {
+                        if (isNaN(v)) return 'Should be a number';
+                        if (v < -2.5 || v > 30) return 'input -2.5 - 30';
+                    }
+                },
+                cellStyle: function (value, row, index, field) {
+                    var strclass = "";
+                    if (value > 25) {
+                        strclass = 'success';
+                    }
+                    else if (value > 15) {
+                        strclass = 'info';
+                    }
+                    else if (value > 5) {
+                        strclass = 'warning';
+                    }
+                    else {
+                        strclass = 'danger';
+                    }
+                    return { classes: strclass }
                 }
-            });
-        })
-
-        $('#btn_remove').click(function() {
-            if(!confirm('Delete all data?')) {
-                return;
-            }
-            $.post('/api/mock/remove/'+ current, 
-                () => {
-                request_graphic(current);
-                request_summary(current);
-                refresh_table(current);
-            })
-        })
+            }, {
+                field: 'times',
+                title: 'Update times',
+                align: 'center'
+            }, {
+                field: 'updatedAt',
+                title: 'Last updated',
+                sortable: true,
+                align: 'center',
+                formatter: function (value, row, index) {
+                    return new Date(Date.parse(value)).toLocaleString()
+                }
+            }, {
+                field: 'operate',
+                title: 'Operate',
+                align: 'center',
+                formatter: function (value, row, index) {
+                    return "<a class='remove' href=javascript:void(0) title='Remove'><i class='glyphicon glyphicon-remove'></i></a>"
+                },
+                events: {
+                    'click .remove': function (e, value, row, index) {
+                        if (!row.new) {
+                            $.post(`/api/mock/remove/${current}/${row.mac}`, function () {
+                                request_graphic(current);
+                                request_summary(current);
+                            })
+                        }
+                        $('table').bootstrapTable('remove', {
+                            field: 'mac',
+                            values: [row.mac]
+                        });
+                    }
+                }
+            }],
+        });
 
         function refresh_table(loc) {
-            $('#table').bootstrapTable('destroy');
-            $('#table').bootstrapTable({
-                url: "/api/stats/snr/json/" + loc,
-                toolbar: '#toolbar', 
-                toolbarAlign: 'right',
-                striped: true,
-                sortName: 'updatedAt',
-                sortOrder: 'desc',
-                sortable:true,
-                pagination: true,
-                sidePagination: "server",
-                pageSize: 10,
-                idField : 'mac',
-                onEditableSave: function(field, row, oldValue) {
-                    row.edit = row[field] !== oldValue;
-                },
-                columns: [{
-                    field: 'mac',
-                    title: 'MAC Address',
-                }, {
-                    field: 'ip',
-                    title: 'IP Address',
-                }, {
-                    field: 'snr',
-                    title: 'SNR',
-                    sortable: true,
-                    align: 'center',
-                    editable: {
-                        type: 'text',
-                        title: 'SNR',
-                        mode: 'inline',
-                        validate: function (v) {
-                            if (isNaN(v)) return 'Should be a number';
-                            if (v < -2.5 || v > 30) return 'input -2.5 - 30';
-                        }
-                    },
-                    cellStyle: function (value, row, index, field) {
-                        var strclass = "";
-                        if (value > 25) {
-                            strclass = 'success';
-                        }
-                        else if (value > 15) {
-                            strclass = 'info';
-                        }
-                        else if (value > 5) {
-                            strclass = 'warning';
-                        }
-                        else {
-                            strclass = 'danger';
-                        }
-                        return { classes: strclass }
-                    }
-                }, {
-                    field: 'times',
-                    title: 'Update times',
-                    align: 'center'
-                }, {
-                    field: 'updatedAt',
-                    title: 'Last updated',
-                    sortable: true,
-                    align: 'center',
-                    formatter: function (value, row, index) {
-                        return new Date(Date.parse(value)).toLocaleString()
-                    }
-                }, {
-                    field: 'operate',
-                    title: 'Operate',
-                    align: 'center',
-                    formatter: function (value, row, index) {
-                        return "<a class='remove' href=javascript:void(0) title='Remove'><i class='glyphicon glyphicon-remove'></i></a>"
-                    },
-                    events:{
-                        'click .remove':function(e, value, row, index) {
-                            if(!row.new) {
-                                $.post(`/api/mock/remove/${current}/${row.mac}`, function() {
-                                    request_graphic(current);
-                                    request_summary(current);
-                                })
-                            } 
-                            $('table').bootstrapTable('remove', {
-                                field: 'mac',
-                                values: [row.mac]
-                            });
-                        }
-                    }
-                }],
-            });
+            $('#table').bootstrapTable('showLoading');
+            $('#table').bootstrapTable('refresh', { url: "/api/stats/snr/json/" + loc })
         }
+
+        var lineDataset = {
+            datasets: [{
+                fill: false,
+                lineTension: 0.1,
+                borderColor: "rgba(75,192,192,0.8)",
+                borderCapStyle: 'butt',
+                borderDash: [],
+                borderDashOffset: 0.0,
+                borderJoinStyle: 'miter',
+                pointBorderColor: "rgba(75,192,192,1)",
+                pointBackgroundColor: "#fff",
+                pointBorderWidth: 1,
+                pointHoverRadius: 5,
+                pointHoverBackgroundColor: "rgba(75,192,192,0.5)",
+                pointHoverBorderColor: "rgba(220,220,220,1)",
+                pointHoverBorderWidth: 2,
+                pointRadius: 1,
+                pointHitRadius: 10,
+            }]
+        }
+
+        var lineChart = new Chart($('#lineChart'), {
+            type: 'line',
+            data: lineDataset,
+            options: {
+                title: {
+                    display: true,
+                    text: 'SNR distribution'
+                },
+                legend: {
+                    display: false,
+                },
+                scales: {
+                    xAxes: [{
+                        type: 'linear',
+                        position: 'bottom',
+                        ticks: {
+                            min: -5,
+                            max: 30,
+                            stepSize: 5
+                        },
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'SNR'
+                        }
+                    }],
+                    yAxes: [{
+                        stacked: true,
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Peer'
+                        }
+                    }]
+
+                },
+
+            }
+        });
 
         function request_graphic(loc, time = $('#ef_time').val()) {
             $.getJSON(`/api/stats/snr/country/${loc}?t=${time}`, data => {
                 console.log("done")
-                var plot1 = $.jqplot('graphic', [data], {
-                    title: 'SNR distribution',
-                    seriesDefaults: {
-                        showMarker: false,
-                    },
-                    cursor: {
-                        show: true,
-                        zoom: true
-                    },
-                    axes: {
-                        xaxis: {
-                            label: "SNR(db)",
-                            labelRenderer: $.jqplot.CanvasAxisLabelRenderer
-                        },
-                        yaxis: {
-                            label: "Peer number",
-                            tickOptions: {
-                                formatString: '%d'
-                            },
-                            labelRenderer: $.jqplot.CanvasAxisLabelRenderer
-                        }
-                    }
-                }).replot();
+                lineDataset.datasets.forEach(function (dataset) {
+                    dataset.data = data.map(x => { return { x: x[0], y: x[1] } })
+                });
+
+                lineChart.update();
             })
         }
 
+
+        var barDataset = {
+            labels: [0, 0.1, 0.2, 0.3, 0.4, 0.5],
+            datasets: [
+                {
+                    backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                    data: [],
+                }
+            ]
+        }
+
+        var barChart = new Chart($('#barChart'), {
+            type: "bar",
+            data: barDataset,
+            options: {
+                title: {
+                    display: true,
+                    text: 'Summary',
+                },
+                legend: {
+                    display: false,
+                },
+                scales: {
+                    xAxes: [{
+                        barPercentage: 0.7,
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Factor'
+                        }
+                    }],
+                    yAxes: [{
+                        stacked: true,
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'SNR',
+                        }
+                    }]
+                }
+            }
+        });
+
         function request_summary(loc, time = $('#ef_time').val()) {
             $.getJSON(`/api/stats/snr/summary/${loc}?t=${time}`, data => {
-                $.jqplot('summary', [data], {
-                    title: 'Summary(x peer < y)',
-                    seriesDefaults: {
-                        renderer: $.jqplot.BarRenderer,
-                        rendererOptions: {
-                            barMargin: 15,
-                        },
-                        pointLabels: { show: true },
-                    },
-                    axes: {
-                        xaxis: {
-                            label: "Factor",
-                            renderer: $.jqplot.CategoryAxisRenderer,
-                        },
-                        yaxis: {
-                            label: "SNR(db)",
-                            max: 30,
-                            tickOptions: {
-                                formatString: '%.2f'
-                            },
-                            labelRenderer: $.jqplot.CanvasAxisLabelRenderer,
-                        }
-                    }
-
-                }).replot();
-
+                barDataset.labels = data.map(x => x[0]);
+                barDataset.datasets.forEach(d => {
+                    d.data = data.map(x => x[1])
+                })
+                barChart.update();
             })
         }
 
@@ -292,7 +324,7 @@
             refresh_table(current);
 
             $("#loc").children().click(function (e) {
-        
+
                 current = $(this).attr('value')
                 $(this).siblings().removeClass('active');
                 $(this).addClass('active')
@@ -306,20 +338,65 @@
                 request_summary(current, e.target.value);
             })
         }
+
+
+        function randommac(size = 12) {
+            var code_string = "ABCDEF0123456789";
+            var max_num = code_string.length + 1;
+            var string = '';
+            while (size > 0) {
+                string += code_string.charAt(Math.floor(Math.random() * max_num));
+                size--;
+            }
+            return string;
+        };
+
+        $('#btn_add').click(function () {
+            var snr = (Math.random() * 30).toFixed(2);
+            var mac = randommac();
+            var ip = '10.' + parseInt(snr) + '.' + (Math.random() * 250).toFixed(2)
+
+            var params = { index: 0, row: { ip, snr, mac, new: true } }
+            $('#table').bootstrapTable('insertRow', params);
+        })
+
+        $('#btn_save').click(function () {
+            var all = $('#table').bootstrapTable('getData');
+            var edit = all.filter(i => i.edit || i.new)
+            if (!edit.length) {
+                return alert('Nothing change!')
+            }
+            edit.map(d => {
+                delete d.edit;
+                delete d.new
+            })
+
+            $.ajax({
+                type: "post",
+                url: '/api/mock/save/' + current,
+                data: JSON.stringify(edit),
+                contentType: "application/json",
+                dataType: 'json',
+                error: () => { $('#table').bootstrapTable('hideLoading'), alert('Save fail, may have duplicate data!') },
+                complete: function () {
+                    refresh_table(current);
+                    request_graphic(current);
+                    request_summary(current);
+                }
+            });
+        })
+
+        $('#btn_remove').click(function () {
+            if (!confirm('Delete all data?')) {
+                return;
+            }
+            $.post('/api/mock/remove/' + current,
+                () => {
+                    request_graphic(current);
+                    request_summary(current);
+                    refresh_table(current);
+                })
+        })
     </script>
-
-<style>
-
-#graphic {
-    width: 45%;
-    height: 350px
-}
-
-#summary {
-    width: 30%;
-    height: 350px    
-}
-
-</style>
 
     <%include footer%>

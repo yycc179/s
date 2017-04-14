@@ -1,7 +1,8 @@
 <%include header%>
 
     <link rel="stylesheet" href="/stylesheets/dashboard.css">
-    <link rel="stylesheet" href="/stylesheets/jquery.jqplot.css">
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.js"></script>
 
     <div class="container-fluid">
         <div class="row">
@@ -21,87 +22,74 @@
             </div>
 
             <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-                <div id="chart1" style="height:400px;width:80%"></div>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>
-                                <%=current?"City":"Country"%> name
-                            </th>
-                            <th>Peer count</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        <% datas.forEach(function(data, i){ %>
+                <div class='row' style="height:450px;width:80%">
+                    <canvas id="chart"></canvas>
+                </div>
+                <div class='row'>
+                    <table class="table">
+                        <thead>
                             <tr>
-                                <th scope="row">
-                                    <%=i%>
+                                <th>#</th>
+                                <th>
+                                    <%=current?"City":"Country"%> name
                                 </th>
-                                <td>
-                                    <%=data._id%>
-                                </td>
-                                <td>
-                                    <%=data.count%>
-                                </td>
+                                <th>Peer count</th>
                             </tr>
-                            <% })%>
-                    </tbody>
-                </table>
+                        </thead>
+
+                        <tbody>
+                            <% datas.forEach(function(data, i){ %>
+                                <tr>
+                                    <th scope="row">
+                                        <%=i%>
+                                    </th>
+                                    <td>
+                                        <%=data._id%>
+                                    </td>
+                                    <td>
+                                        <%=data.count%>
+                                    </td>
+                                </tr>
+                                <% })%>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 
-    <script src="/javascripts/jquery.jqplot.min.js"></script>
-    <script src="/javascripts/plugins/jqplot.categoryAxisRenderer.min.js"></script>
-    <script src="/javascripts/plugins/jqplot.canvasAxisTickRenderer.min.js"></script>
-    <script src="/javascripts/plugins/jqplot.canvasTextRenderer.min.js"></script>
-    <script src="/javascripts/plugins/jqplot.pointLabels.min.js"></script>
-    <script src="/javascripts/plugins/jqplot.barRenderer.min.js"></script>
-    <script src="/javascripts/plugins/jqplot.canvasAxisLabelRenderer.min.js"></script>
-
-    <!--<script src="https://unpkg.com/babel-standalone@6/babel.js"></script>-->
-    <script src="//cdn.bootcss.com/babel-standalone/6.23.1/babel.min.js"></script>
-
-    <script type="text/babel"> 
-        var data = [
-            <% datas.forEach((data, i) => {
-                if (i < 20) {%>
-                    ['<%=data._id%>', <%=data.count %>],
-                    <%}}) %>];
-
-        $('#chart1').jqplot([data], {
-            title: 'Peer distribution',
-            animate: !$.jqplot.use_excanvas,
-            seriesDefaults: {
-                renderer: $.jqplot.BarRenderer,
-                pointLabels: { show: true, ypadding: 0 },
-                rendererOptions: {
-                    barWidth: 30,
-                    shadow: true,
-                    varyBarColor: true
-                },
-            },
-
-            axesDefaults: {
-                tickRenderer: $.jqplot.CanvasAxisTickRenderer,
-                tickOptions: {
-                    fontFamily: 'Georgia',
-                    fontSize: '15pt',
-                    angle: -30
+    <script>
+        var barDataset = {
+            labels: [<% datas.forEach((data, i) => {
+                if (i < 50) {%>'<%=data._id%>', <%}}) %>],
+            datasets: [
+                {
+                    backgroundColor: 'rgba(75, 192, 192, 1)',
+                    data: [<% datas.forEach((data, i) => {
+                        if (i < 50) {%><%=data.count %>,<%}}) %>],
                 }
-            },
-            axes: {
-                xaxis: {
-                    renderer: $.jqplot.CategoryAxisRenderer,
+            ]
+        }
+
+        var barChart = new Chart($('#chart'), {
+            type: "bar",
+            data: barDataset,
+            options: {
+                maintainAspectRatio: false,
+                title: {
+                    display: true,
+                    text: 'Peer distribution',
                 },
-                yaxis: {
-                    labelRenderer: $.jqplot.CanvasAxisLabelRenderer,
-                    label: "Peer Count",
-                    tickOptions: {
-                        formatString: '%d'
-                    },
+                legend: {
+                    display: false,
+                },
+                scales: {
+                    xAxes: [{
+                        barPercentage: <%=datas.length < 10 ? 0.3 : 0.9 %>,
+                    }],
+                    yAxes: [{
+                        stacked: true,
+                    }]
                 }
             }
         });
