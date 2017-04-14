@@ -41,7 +41,6 @@ router.get('/local', (req, res, next) => {
             res.json(datas)
         })
         .catch(e => next(e))
-
 });
 
 module.exports = router

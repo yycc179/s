@@ -5,6 +5,7 @@ const schema = Schema({
     mac: { type: String, index: true, unique: true },
     ip: { type: String },
     loc: { type: Schema.Types.ObjectId, index: true, ref: 'country' },
+    city: { type: Schema.Types.ObjectId, index: true, ref: 'city' },
     snr: Number,
     times: { type: Number, default: 0 },
 }, {

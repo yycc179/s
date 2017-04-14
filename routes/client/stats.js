@@ -5,8 +5,8 @@ const router = require('express').Router()
     , Country = require('../../models/country')
     , City = require('../../models/city');
 
-router.get('/snr', (req, res) => {
-    Join(Country.find().sort({ name: 1 }).exec(),
+router.get('/snr', (req, res, next) => {
+    Join(Country.find().sort({ name: 1 }).lean().exec(),
         client.hgetAsync('config', 'valid_time'),
         (datas, time) => {
             res.render('snr', { title: 'snr', user: req.user, datas, time });
@@ -14,14 +14,13 @@ router.get('/snr', (req, res) => {
        .catch(e => next(e))
 });
 
-
 function getCountry() {
     return City.aggregate([
         { $group: { _id: '$country', count: { $sum: '$peer' } } },
         { $sort: { count: 1 } }]).exec();
 }
 
-router.get('/peer', (req, res) => {
+router.get('/peer', (req, res, next) => {
     getCountry()
         .then(datas => res.render('peer',
             {
@@ -34,7 +33,6 @@ router.get('/peer', (req, res) => {
         .catch(e => next(e))
 });
 
-
 router.get('/peer/:country', (req, res, next) => {
     var datas;
     const { country } = req.params;
@@ -46,9 +44,10 @@ router.get('/peer/:country', (req, res, next) => {
         .exec()
         .then(cities => {
             datas = cities
-            return getCountry();
+            return Country.find().sort({ name: 1 }).lean().exec();
         })
         .then(countries => {
+            countries.map(c => {c._id = c.name; delete c.name})
             res.render('peer', { title: 'peer', user: req.user, datas, countries, current: country });
         })
         .catch(e => next(e))

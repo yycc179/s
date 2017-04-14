@@ -128,6 +128,7 @@ router.get('/config', (req, res, next) => {
                     .exec(),
                 (con, city) => {
                     role.loc = con._id;
+                    role.city = city._id;
                     if (Mod == Qos) {
                         role.loc_s = con.name + '-' + city.name
                     }
