@@ -20,7 +20,7 @@
                     <th>Target(db)</th>
                     <th>Step(db)</th>
                     <th>Step time(s)</th>
-                    <th>Submit</th>
+                    <th>Action</th>
                 </tr>
             </thead>
 
@@ -61,8 +61,8 @@
                             <input type="number" class="form-control input_<%=i%>" name="att_inv" min="5" max="30" step="1" value=<%=data.att_inv%>
                         </td>
                         <td>
-                            <button type="button" id="remove_<%=i%>" value="<%=data._id%>" class="remove btn btn-default pull-right"><a  href=javascript:void(0)><i class='glyphicon glyphicon-remove'></i></a></button>
-                            <button type="button" id="submit_<%=i%>" value="<%=data._id%>" class="submit btn btn-default pull-right"><a  href=javascript:void(0)><i class='glyphicon glyphicon-ok'></i></a></button>
+                            <button type="button" id="submit_<%=i%>" value="<%=data._id%>" class="submit btn btn-default"><a  href=javascript:void(0)><i class='glyphicon glyphicon-ok'></i></a></button>
+                            <button type="button" id="remove_<%=i%>" value="<%=data._id%>" class="remove btn btn-default"><a  href=javascript:void(0)><i class='glyphicon glyphicon-remove'></i></a></button>
                         </td>
                     </tr>
                     <% })%>
