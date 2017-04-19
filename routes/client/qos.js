@@ -33,6 +33,13 @@ router.post('/:id', (req, res, next) => {
     })
 });
 
+router.post('/del/:id', (req, res, next) => {
+    Qos.remove({_id: req.params.id}, e => {
+        if (e) return next(e);
+        res.json({ ok: 1 })
+    })
+});
+
 router.get('/local', (req, res, next) => {
     Promise.join(client.hgetAsync('config', 'next_query'),
         Qos.find().sort('loc').select('snr_local updatedAt').lean().exec(),

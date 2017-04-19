@@ -39,8 +39,8 @@
                         <td>
                             <%=data.ip%>
                         </td>
-                        <td >
-                           <span id='st_<%=data._id%>' class="label label-primary"><%=data.status%></span> 
+                        <td>
+                            <span id='st_<%=data._id%>' class="label label-primary"><%=data.status%></span>
                         </td>
                         <td id='sn_<%=data._id%>'>
                             <%=data.snr_local%>
@@ -61,7 +61,8 @@
                             <input type="number" class="form-control input_<%=i%>" name="att_inv" min="5" max="30" step="1" value=<%=data.att_inv%>
                         </td>
                         <td>
-                            <button type="button" id="submit_<%=i%>" value="<%=data._id%>" class="btn btn-default pull-right"><a  href=javascript:void(0)><i class='glyphicon glyphicon-ok'></i></a></button>
+                            <button type="button" id="remove_<%=i%>" value="<%=data._id%>" class="remove btn btn-default pull-right"><a  href=javascript:void(0)><i class='glyphicon glyphicon-remove'></i></a></button>
+                            <button type="button" id="submit_<%=i%>" value="<%=data._id%>" class="submit btn btn-default pull-right"><a  href=javascript:void(0)><i class='glyphicon glyphicon-ok'></i></a></button>
                         </td>
                     </tr>
                     <% })%>
@@ -80,7 +81,7 @@
             $('#att_target_' + id).attr('disabled', !e.target.checked)
         })
 
-        $('button').click(function (e) {
+        $('button.submit').click(function (e) {
             var id = this.id.split('_')[1];
             var obj = {
                 manual: $('#checkbox_' + id).is(':checked')
@@ -97,6 +98,23 @@
                 dataType: 'json',
                 error: () => alert('setting fail!'),
                 success: () => {
+                    $('#info').slideDown();
+                    setTimeout(() => $('#info').fadeOut(), 1000)
+                }
+            });
+        })
+
+        $('button.remove').click(function (e) {
+            var id = this.id.split('_')[1];
+
+            $.ajax({
+                type: "post",
+                url: '/web/qos/del/' + $(this).val(),
+                contentType: "application/json",
+                dataType: 'json',
+                error: () => alert('setting fail!'),
+                success: () => {
+                    $(`tbody tr:eq(${id})`).remove();
                     $('#info').slideDown();
                     setTimeout(() => $('#info').fadeOut(), 1000)
                 }
