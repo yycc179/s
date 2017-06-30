@@ -21,7 +21,7 @@ function getClientIp(req) {
 
 function queryCity(ip) {
     const data = geoip.lookup(ip);
-    if (data && data.city) {
+    if (data && data.country) {
         return Promise.resolve(data)
     }
 
@@ -118,7 +118,7 @@ router.get('/config', (req, res, next) => {
         })
         .then(data => {
             const { country = 'UNKNOW' } = data;
-            Promise.join(Country.findOneAndUpdate({ name: country }, {},
+            return Promise.join(Country.findOneAndUpdate({ name: country }, {},
                 { upsert: true, new: true })
                 .exec(),
                 City.findOneAndUpdate(
