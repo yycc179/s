@@ -315,6 +315,69 @@ router.get('/query', (req, res, next) => {
         })
 })
 
+router.post('/query', (req, res, next) => {
+    const {mac} = req.body.device
+    const {status } = req.body
+
+    if (!status.snr || isNaN(status.snr)) {
+        return next();
+    }
+
+    let config
+    var out = {}
+    Promise.join(client.hgetallAsync('config'),
+        Qos.findOneAndUpdate({ mac }, { status, updatedAt: Date.now()}).lean().exec(),
+        (obj, doc) => {
+            config = obj;
+            var loc = doc && doc.loc;
+            if (!loc) {
+                var e = new Error('config first');
+                e.status = 401;
+                return Promise.reject(e);
+            }
+            out.next = parseInt(config.next_query)
+
+            var manual = doc.att.manual
+            delete doc.att.manual
+            out.att = doc.att
+            if(doc.antenna.manual) {
+                delete doc.antenna.manual
+                out.antenna = doc.antenna
+            }
+            if (manual) {
+                res.json(out)
+                return Promise.reject();
+            }
+            
+            return Peer.aggregate([
+                {
+                    $match: {
+                        loc: ObjectId(loc),
+                        updatedAt: getUpdatedAt(config.valid_time),
+                        snr: { $gt: SNR_MIN }
+                    }
+                },
+                { $sort: { updatedAt: -1 } },
+                { $limit: 10000 },
+                { $project: { _id: 0, snr: 1 } },
+
+            ]).sort('snr').exec()
+        })
+        .then(docs => {
+            if (!docs.length) {
+                delete out.att
+                out.err = 'no snr'
+                return res.json(out)
+            }
+            const { snr } = docs[parseInt(docs.length * config.factor)];
+            out.att.aim = snr;
+            res.json(out)
+        })
+        .catch(e => {
+            if (e) next(e)
+        })
+})
+
 router.use('/stats', require('./stats'));
 router.use('/mock', require('./mock'));
 

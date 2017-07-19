@@ -32,7 +32,7 @@ httpsServer.listen(port)
 httpsServer.on('error', onError);
 httpsServer.on('listening', onListening);
 
-if(app.get('env') === 'development') {
+if(app.get('env') !== 'production') {
   http.createServer(app)
     .listen(3000)
     .on('listening', onListening);

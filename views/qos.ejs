@@ -1,152 +1,251 @@
 <%include header%>
+    <script src="https://unpkg.com/vue"></script>
 
-    <div class="container">
+    <div class="loading pull-left">
+        <div><span></span></div>
+        <div><span></span></div>
+        <div><span></span></div>
+    </div>
 
-        <table class="table">
+    <div id="app">
+
+        <table class="table table-bordered">
             <caption>
                 <div id='info' class="alert alert-success" role="alert" hidden=true>
-                    Settting success!
                 </div>
             </caption>
             <thead>
                 <tr>
                     <th>#</th>
                     <th>Location</th>
-                    <th>Mac Address </th>
-                    <th>IP Address </th>
+                    <th>Mac </th>
+                    <th>IP </th>
                     <th>Status</th>
-                    <th>Local(db)</th>
-                    <th>Manual mode</th>
-                    <th>Target(db)</th>
-                    <th>Step(db)</th>
-                    <th>Step time(s)</th>
+
+                    <th>Attenuation</th>
+                    <th>Antenna</th>
+
                     <th>Action</th>
                 </tr>
             </thead>
 
             <tbody>
-                <% datas.forEach(function(data, i){%>
-                    <tr>
-                        <th scope="row">
-                            <%=i%>
-                        </th>
-                        <td>
-                            <%=data.loc_s%>
-                        </td>
-                        <td>
-                            <%=data.mac%>
-                        </td>
-                        <td>
-                            <%=data.ip%>
-                        </td>
-                        <td>
-                            <span id='st_<%=data._id%>' class="label label-primary"><%=data.status%></span>
-                        </td>
-                        <td id='sn_<%=data._id%>'>
-                            <%=data.snr_local%>
-                        </td>
-                        <td class="center-block">
-                            <input id="checkbox_<%=i%>" type="checkbox" <%=data.manual ? "checked": ""%>>
-                        </td>
-                        <td>
-                            <input type="number" id='att_target_<%=i%>' class="form-control input_<%=i%>" name="att_aim" min="1" max="30" step="0.5"
-                                value=<%=data.att_aim%>
-                            <%=data.manual?"":"disabled"%>>
-                        </td>
-                        <td>
-                            <input type="number" class="form-control input_<%=i%>" name="att_step" min="0.25" max="3" step="0.25" value=<%=data.att_step%>
+                <tr v-for="(data, i ) in datas">
+                    <th scope="row">
+                        {{i}}
+                    </th>
+                    <td>
+                        {{data.loc_s}}
+                    </td>
+                    <td>
+                        {{data.mac}}
+                    </td>
+                    <td>
+                        {{data.ip}}
+                    </td>
+                    <td>
+                        <span class="label label-primary">{{data.active ? 'ON' : 'OFF'}}</span>
+                    </td>
 
-                        </td>
-                        <td>
-                            <input type="number" class="form-control input_<%=i%>" name="att_inv" min="5" max="30" step="1" value=<%=data.att_inv%>
-                        </td>
-                        <td>
-                            <button type="button" id="submit_<%=i%>" value="<%=data._id%>" class="submit btn btn-default"><a  href=javascript:void(0)><i class='glyphicon glyphicon-ok'></i></a></button>
-                            <button type="button" id="remove_<%=i%>" value="<%=data._id%>" class="remove btn btn-default"><a  href=javascript:void(0)><i class='glyphicon glyphicon-remove'></i></a></button>
-                        </td>
-                    </tr>
-                    <% })%>
+                    <td>
+                        <div class="row">
+                            <div class="col-md-4"> <label>Local</label></div>
+                            <div class="col-md-8"> <span class="text-muted">{{ data.status && data.status.snr}}</span> db</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4"> <label>Target</label></div>
+                            <div class="col-md-8 form-inline">
+                                <input type="number" class="form-control" min="1" max="30" step="0.5" v-model.number="data.att.aim" :disabled="!data.att.manual">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4"> <label>Step</label></div>
+                            <div class="col-md-8">
+                                <input type="number" class="form-control" min="0.25" max="3" step="0.25" v-model.number="data.att.step">
+                            </div>
+                        </div>
+
+
+                        <div class="row">
+                            <div class="col-md-4"> <label>Interval</label></div>
+                            <div class="col-md-8">
+                                <input type="number" class="form-control" min="5" max="30" step="1" v-model.number="data.att.inv">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4"> <label>Manual</label></div>
+                            <div class="col-md-8">
+                                <input type="checkbox" v-model="data.att.manual">
+                            </div>
+                        </div>
+                    </td>
+
+                    <td>
+                        <div class="row">
+                            <div class="col-md-4"> <label>Local</label></div>
+                            <div class="col-md-8"> <span class="text-muted">{{ data.status && data.status.antenna}}</span></div>
+                        </div>
+
+                        <div v-show="data.antenna.manual">
+                            <div class="row">
+                                <div class="col-md-4"> <label>LNB Type</label></div>
+                                <div class="col-md-8">
+                                    <select class="form-control" v-model="data.antenna.lnb.type">
+                                    <option value=0>C Band</option>
+                                    <option value=1>KU Band</option>
+                                </select>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4"> <label>LNB Freq</label></div>
+                                <div class="col-md-8 form-inline">
+                                    <input type="number" class="form-control" style="width:90px" v-model.number="data.antenna.lnb.freq_l">                                    /
+                                    <input type="number" class="form-control" style="width:90px" v-model.number="data.antenna.lnb.freq_h">
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4"> <label>Transponder</label></div>
+                                <div class="col-md-8 form-inline">
+                                    <input type="number" class="form-control" style="width:90px" v-model.number="data.antenna.tp.freq">                                    /
+                                    <input type="number" class="form-control" style="width:90px" v-model.number="data.antenna.tp.rate">
+                                    <label class="radio-inline">
+                                    <input type="radio" value=0 v-model="data.antenna.tp.polar" > V
+                                </label>
+                                    <label class="radio-inline">
+                                    <input type="radio" value="1" v-model="data.antenna.tp.polar" > H
+                                </label></div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4"> <label>Manual</label></div>
+                            <div class="col-md-8">
+                                <input type="checkbox" v-model="data.antenna.manual">
+                            </div>
+                        </div>
+                    </td>
+
+                    <td>
+                        <button type="button" value="" class="submit btn btn-default" @click="edit(data)"><a href=javascript:void(0) ><i class='glyphicon glyphicon-ok'></i></a></button>
+                        <button type="button" value="" class="remove btn btn-default" @click="remove(data._id, i)"><a href=javascript:void(0)><i class='glyphicon glyphicon-remove'></i></a></button>
+                    </td>
+                </tr>
             </tbody>
         </table>
-        <div class="loading pull-left">
-            <div><span></span></div>
-            <div><span></span></div>
-            <div><span></span></div>
-        </div>
+
     </div>
 
     <script>
-        $('input[type=checkbox]').change(e => {
-            var id = e.target.id.split('_')[1];
-            $('#att_target_' + id).attr('disabled', !e.target.checked)
-        })
+        var app = new Vue({
+            el: '#app',
+            data: {
+                datas: []
+            },
+            created: function () {
+                this.featchList();
+                setInterval(this.update, 5000)
+            },
+            methods: {
+                featchList: function () {
+                    $.getJSON('/web/qos/list', res => {
+                        this.datas = res;
+                    })
+                },
 
-        $('button.submit').click(function (e) {
-            var id = this.id.split('_')[1];
-            var obj = {
-                manual: $('#checkbox_' + id).is(':checked')
+                update: function () {
+                    $.getJSON('/web/qos/status', res => {
+                        res.forEach((data, i) => {
+                            for (k in data) {
+                                this.datas[i][k] = data[k];
+                            }
+                        });
+                    })
+                },
+
+                edit: function (data) {
+                    var obj = {
+                        att: data.att,
+                        antenna: data.antenna,
+                    }
+
+                    $.ajax({
+                        type: "post",
+                        url: '/web/qos/' + data._id,
+                        data: JSON.stringify(obj),
+                        contentType: "application/json",
+                        dataType: 'json',
+                        error: () => alert('setting fail!'),
+                        success: () => {
+                            $('#info').text("Edit success!").slideDown();
+                            setTimeout(() => $('#info').fadeOut(), 1000)
+                        }
+                    });
+                },
+
+                remove: function (id, i) {
+                    $.ajax({
+                        type: "post",
+                        url: '/web/qos/del/' + id,
+                        error: () => alert('setting fail!'),
+                        success: () => {
+                            $(`tbody tr:eq(${i})`).remove();
+                            $('#info').text('Delete success!').slideDown();
+                            setTimeout(() => $('#info').fadeOut(), 1000)
+                        }
+                    });
+                }
             }
-            for (one of $('.input_' + id)) {
-                obj[one.name] = one.value;
-            }
-
-            $.ajax({
-                type: "post",
-                url: '/web/qos/' + $(this).val(),
-                data: JSON.stringify(obj),
-                contentType: "application/json",
-                dataType: 'json',
-                error: () => alert('setting fail!'),
-                success: () => {
-                    $('#info').slideDown();
-                    setTimeout(() => $('#info').fadeOut(), 1000)
-                }
-            });
         })
-
-        $('button.remove').click(function (e) {
-            var id = this.id.split('_')[1];
-
-            $.ajax({
-                type: "post",
-                url: '/web/qos/del/' + $(this).val(),
-                contentType: "application/json",
-                dataType: 'json',
-                error: () => alert('setting fail!'),
-                success: () => {
-                    $(`tbody tr:eq(${id})`).remove();
-                    $('#info').slideDown();
-                    setTimeout(() => $('#info').fadeOut(), 1000)
-                }
-            });
-        })
-
-        setInterval(function () {
-            $.getJSON('/web/qos/local', datas => {
-                for (one of datas) {
-                    $('#st_' + one._id).text(one.status)
-                    $('#sn_' + one._id).text(one.snr_local)
-                }
-            })
-        }, 5000)
     </script>
 
     <style>
+        #app {
+            margin-left: 180px;
+            margin-right: 180px
+        }
+
+        #info {
+            position: fixed;
+            top: 50px;
+            right: 0;
+            text-align: center;
+            width: 300px;
+            height: 50px;
+        }
+
+        .form-control {
+            max-width: 150px;
+        }
+
+        .row {
+            margin-bottom: 10px
+        }
+
+        input[type=checkbox] {
+            width: 18px;
+            height: 18px
+        }
+
         .loading {
             width: 60px;
             height: 60px;
-            margin: 0 auto;
-            /*margin-top: 100px;*/
+            /*margin: 0 auto;*/
+            margin-left: 50px;
             position: relative;
             -webkit-animation: load 3s linear infinite;
         }
-        
+
         .loading div {
             width: 100%;
             height: 100%;
             position: absolute;
         }
-        
+
         .loading span {
             display: inline-block;
             width: 20px;
@@ -159,7 +258,7 @@
             margin-left: -10px;
             -webkit-animation: changeBgColor 3s ease infinite;
         }
-        
+
         @-webkit-keyframes load {
             0% {
                 -webkit-transform: rotate(0deg);
@@ -174,7 +273,7 @@
                 -webkit-transform: rotate(360deg);
             }
         }
-        
+
         @-webkit-keyframes changeBgColor {
             0%,
             100% {
@@ -187,19 +286,19 @@
                 background: #FF6666;
             }
         }
-        
+
         .loading div:nth-child(2) {
             -webkit-transform: rotate(120deg);
         }
-        
+
         .loading div:nth-child(3) {
             -webkit-transform: rotate(240deg);
         }
-        
+
         .loading div:nth-child(2) span {
             -webkit-animation-delay: 1s;
         }
-        
+
         .loading div:nth-child(3) span {
             -webkit-animation-delay: 2s;
         }

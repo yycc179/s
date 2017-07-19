@@ -7,7 +7,7 @@ exports = module.exports = {
     sesion_ttl: 7 * 24 * 3600,   //7 days
     hash_slat: 'hash(user)',
     admin_user: 'admin',
-    admin_password: 'admin',
+    admin_password: 'avl1108',
 
     SNR_WEIGHT: 1,
     SNR_MAX: 30,
