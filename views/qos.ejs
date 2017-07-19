@@ -85,14 +85,14 @@
 
                     <td>
                         <div class="row">
-                            <div class="col-md-4"> <label>Local</label></div>
-                            <div class="col-md-8"> <span class="text-muted">{{ data.status && data.status.antenna}}</span></div>
+                            <div class="col-md-3"> <label>Local</label></div>
+                            <div class="col-md-9"> <span class="text-muted">{{ data.status && data.status.antenna}}</span></div>
                         </div>
 
                         <div v-show="data.antenna.manual">
                             <div class="row">
-                                <div class="col-md-4"> <label>LNB Type</label></div>
-                                <div class="col-md-8">
+                                <div class="col-md-3"> <label>LNB Type</label></div>
+                                <div class="col-md-9">
                                     <select class="form-control" v-model="data.antenna.lnb.type">
                                     <option value=0>C Band</option>
                                     <option value=1>KU Band</option>
@@ -101,16 +101,16 @@
                             </div>
 
                             <div class="row">
-                                <div class="col-md-4"> <label>LNB Freq</label></div>
-                                <div class="col-md-8 form-inline">
+                                <div class="col-md-3"> <label>LNB Freq</label></div>
+                                <div class="col-md-9 form-inline">
                                     <input type="number" class="form-control" style="width:90px" v-model.number="data.antenna.lnb.freq_l">                                    /
                                     <input type="number" class="form-control" style="width:90px" v-model.number="data.antenna.lnb.freq_h">
                                 </div>
                             </div>
 
                             <div class="row">
-                                <div class="col-md-4"> <label>Transponder</label></div>
-                                <div class="col-md-8 form-inline">
+                                <div class="col-md-3"> <label>Transponder</label></div>
+                                <div class="col-md-9 form-inline">
                                     <input type="number" class="form-control" style="width:90px" v-model.number="data.antenna.tp.freq">                                    /
                                     <input type="number" class="form-control" style="width:90px" v-model.number="data.antenna.tp.rate">
                                     <label class="radio-inline">
@@ -123,8 +123,8 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-4"> <label>Manual</label></div>
-                            <div class="col-md-8">
+                            <div class="col-md-3"> <label>Manual</label></div>
+                            <div class="col-md-9">
                                 <input type="checkbox" v-model="data.antenna.manual">
                             </div>
                         </div>
@@ -205,8 +205,8 @@
 
     <style>
         #app {
-            margin-left: 180px;
-            margin-right: 180px
+            margin-left: 200px;
+            margin-right: 200px
         }
 
         #info {
