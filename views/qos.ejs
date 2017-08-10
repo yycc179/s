@@ -115,7 +115,7 @@
                                 <strong>+</strong>
                                 <input type="number" class="form-control" min="-3" max="3" step="0.5" v-model.number="data.att.factor" style="max-width:80px">
                                 <strong>=</strong>
-                                <span class="text-primary ">{{ data.status.snr && (data.status.snr + data.att.factor || 0 )}}</span>                                db
+                                <span class="text-primary ">{{ data.status.snr && (data.status.snr + (data.att.factor || 0))}}</span> db
                             </div>
                         </div>
                         <div class="row">
@@ -215,7 +215,7 @@
             },
             mounted: function () {
                 this.featchList();
-                // setInterval(this.update, 5000)
+                setInterval(this.update, 5000)
             },
             computed: {
 
