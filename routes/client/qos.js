@@ -27,17 +27,10 @@ router.post('/del/:id', (req, res, next) => {
 function wrapper_data(docs, next_query) {
     var now = new Date();
     now.setSeconds(now.getSeconds() - next_query - 5);
--    docs.map(d => {
--        d.active = d.updatedAt > now;
--        var lnb = d.antenna && d.antenna.lnb;
--        if (lnb) {
--            lnb.freq_h = lnb.freq >> 16;
--            lnb.freq_l = lnb.freq & 0xffff;
--            delete lnb.freq;
--        }
--
--        delete d.updatedAt
--    })
+    docs.map(d => {
+        d.active = (d.updatedAt > now)
+        delete d.updatedAt
+    })
 
 }
 
