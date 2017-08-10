@@ -46,7 +46,7 @@ router.get('/list', (req, res, next) => {
 
 router.get('/status', (req, res, next) => {
     Promise.join(client.hgetAsync('config', 'next_query'),
-        Qos.find({ 'status.snr': { $exists: true } }).sort('loc_s').select('-_id updatedAt status').lean().exec(),
+        Qos.find({ 'status.snr': { $exists: true } }).sort('loc').select('-_id updatedAt status').lean().exec(),
         (value, datas) => {
             wrapper_data(datas, value)
             res.json(datas)
