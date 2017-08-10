@@ -128,10 +128,10 @@ router.get('/config', (req, res, next) => {
                     .exec(),
                 (con, city) => {
                     role.loc = con._id;
-                    role.city = city._id;
-                    if (Mod == Qos) {
-                        role.loc_s = con.name + '-' + city.name
-                    }
+                    // role.city = city._id;
+                    // if (Mod == Qos) {
+                    //     role.loc_s = con.name + '-' + city.name
+                    // }
                     return role.save();
                 }
             )
@@ -182,7 +182,7 @@ router.get('/location', (req, res, next) => {
 router.post('/update', (req, res, next) => {
     var body = req.body;
     var snr = body.snr || (body.length && body.pop().snr);
-    
+
     if (snr == undefined || snr < SNR_MIN || snr > SNR_MAX) {
         return res.status(403).json({ err: 'invalid data' })
     }
@@ -205,34 +205,49 @@ router.post('/update', (req, res, next) => {
         .catch(e => next(e))
 })
 
+
 /**
- * @api {get} /query get attenuation
- * @apiName getAtt
+ * @api {post} /query query attenuation and antenna status
+ * @apiName postAtt
  * @apiGroup QOS
- * @apiParam {Number} l local snr value
- * @apiParam {String} m mac address
  *
  * @apiSuccess {String} [err]  err info.
  * @apiSuccess {Number} next  next query internal/seconds.
- * @apiSuccess {Number} att_aim target snr/db.
- * @apiSuccess {Number} att_step att step/db.
- * @apiSuccess {Number} att_inv att interval/seconds.
+ * @apiSuccess {Object} att  att detail.
+ * @apiSuccess {Object} [antenna] antenna setting params.
  *  
  *  @apiSuccessExample Success-Response-ok:
  *     HTTP/1.1 200 OK
  *     {
  *       "next": 10, 
- *       "att_aim": 3,
- *       "att_step": 0.25,
- *       "att_inv": 5
- *     }
- * 
- *  @apiSuccessExample Success-Response-sleep:
- *     HTTP/1.1 200 OK
- *     {
- *       "next": 3600    
+ *       "att": {
+ *          "aim": 3,
+ *          "step": 0.5,
+ *          "inv": 5,
+ *       },
+ *       "antenna": {
+ *          "lnb": {
+ *              "freq": 196608005,
+ *              "type": 0
+ *          },
+ *          "tp": {
+ *              "polar": 0,
+ *              "rate": 5,
+ *              "freq": 9
+ *          }
+ *       }
  *     }
  *
+ *   @apiSuccessExample Success-Response-ok2:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "next": 10, 
+ *       "att": {
+ *          "aim": 3,
+ *          "step": 0.5,
+ *          "inv": 5,
+ *       }
+ * 
  *  @apiSuccessExample Success-Response-no-data:
  *     HTTP/1.1 200 OK
  *     {
@@ -249,75 +264,10 @@ router.post('/update', (req, res, next) => {
  *     }
  * 
  */
-router.get('/query', (req, res, next) => {
-    const ip = getClientIp(req);
-    const mac = req.query.m;
-    const { l, m } = req.query;
-
-    if (!l || isNaN(l) || !mac) {
-        return next();
-    }
-
-    let config;
-    let qos;
-    Promise.join(client.hgetallAsync('config'),
-        Qos.findOneAndUpdate({ mac: m }, { snr_local: l, updatedAt: Date.now()}).exec(),
-        (obj, doc) => {
-            config = obj;
-            qos = doc;
-            var loc = doc && doc.loc;
-            if (!loc) {
-                var e = new Error('config first');
-                e.status = 401;
-                return Promise.reject(e);
-            }
-
-            if (doc.manual) {
-                const { att_aim, att_inv, att_step } = doc;
-                res.json({ next: parseInt(config.next_query), att_aim, att_inv, att_step })
-                return Promise.reject();
-            }
-
-            return Peer.aggregate([
-                {
-                    $match: {
-                        loc: ObjectId(loc),
-                        updatedAt: getUpdatedAt(config.valid_time),
-                        snr: { $gt: SNR_MIN }
-                    }
-                },
-                { $sort: { updatedAt: -1 } },
-                { $limit: 10000 },
-                { $project: { _id: 0, snr: 1 } },
-
-            ]).sort('snr').exec()
-        })
-        .then(docs => {
-            const next = parseInt(config.next_query);
-
-            if (!docs.length) {
-                return res.json({ err: 'no data', next })
-            }
-            const { snr } = docs[parseInt(docs.length * config.factor)];
-
-            // var obj = { next };
-            // if (l > snr && config.att_alg == 1) {
-            //     obj.att = Number(((l - snr) / 2).toFixed(2));
-            // }
-            // else if (config.att_alg == 2) {
-            //     obj.att_inc = Number(config.att_step);
-            // }
-            const { att_inv, att_step } = qos;
-            res.json({ next, att_aim: snr, att_inv, att_step })
-        })
-        .catch(e => {
-            if (e) next(e)
-        })
-})
 
 router.post('/query', (req, res, next) => {
-    const {mac} = req.body.device
-    const {status } = req.body
+    const { mac } = req.body.device
+    const { status } = req.body
 
     if (!status.snr || isNaN(status.snr)) {
         return next();
@@ -326,7 +276,7 @@ router.post('/query', (req, res, next) => {
     let config
     var out = {}
     Promise.join(client.hgetallAsync('config'),
-        Qos.findOneAndUpdate({ mac }, { status, updatedAt: Date.now()}).lean().exec(),
+        Qos.findOneAndUpdate({ mac }, { status, updatedAt: Date.now() }).populate('antenna.satellite', '-_id lnb tp').lean().exec(),
         (obj, doc) => {
             config = obj;
             var loc = doc && doc.loc;
@@ -340,15 +290,17 @@ router.post('/query', (req, res, next) => {
             var manual = doc.att.manual
             delete doc.att.manual
             out.att = doc.att
-            if(doc.antenna.manual) {
-                delete doc.antenna.manual
-                out.antenna = doc.antenna
+            if (doc.antenna.manual && doc.antenna.satellite) {
+                out.antenna = {
+                    lnb: doc.antenna.satellite.lnb,
+                    tp: doc.antenna.satellite.tp
+                }
             }
             if (manual) {
                 res.json(out)
                 return Promise.reject();
             }
-            
+
             return Peer.aggregate([
                 {
                     $match: {
@@ -374,7 +326,7 @@ router.post('/query', (req, res, next) => {
             res.json(out)
         })
         .catch(e => {
-            if (e) next(e)
+            if (e) return next(e)
         })
 })
 

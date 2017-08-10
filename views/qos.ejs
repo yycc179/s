@@ -1,6 +1,5 @@
 <%include header%>
     <script src="https://unpkg.com/vue"></script>
-
     <div class="loading pull-left">
         <div><span></span></div>
         <div><span></span></div>
@@ -8,23 +7,80 @@
     </div>
 
     <div id="app">
+        <div id='info' class="alert alert-success" role="alert" hidden=true></div>
+        <button type="button" class="btn pull-right glyphicon glyphicon-chevron-down" @click='open_s'>Satellites</button>
+
+        <table class="table" id='sat' hidden>
+            <caption>
+                <button type="button" value="" class="btn btn-default pull-right" @click="add"><a href=javascript:void(0)><i class='glyphicon glyphicon-plus'></i></a></button>
+            </caption>
+            <thead>
+                <tr class="bg-info">
+                    <th>#</th>
+                    <th>Sat Name</th>
+                    <th>LNB Type </th>
+                    <th>LNB Freq </th>
+                    <th>Transponder </th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr v-for="(sat, i ) in temp_s">
+                    <th scope="row">
+                        {{i}}
+                    </th>
+                    <td>
+                        <input type="text" class="form-control" v-model.string="sat.name">
+                    </td>
+                    <td>
+                        <select class="form-control" v-model="sat.lnb.type">
+                                    <option value=0>C Band</option>
+                                    <option value=1>KU Band</option>
+                                </select>
+
+                    </td>
+
+                    <td>
+                        <div class="form-inline">
+                            <input type="number" class="form-control" v-model.number="sat.lnb.freq_l"> /
+                            <input type="number" class="form-control" v-model.number="sat.lnb.freq_h">
+                        </div>
+
+                    </td>
+
+                    <td>
+                        <div class="form-inline">
+                            <input type="number" class="form-control" v-model.number="sat.tp.freq"> /
+                            <input type="number" class="form-control" v-model.number="sat.tp.rate">
+                            <label class="radio-inline">
+                                    <input type="radio" value=0 v-model="sat.tp.polar" > V
+                                </label>
+                            <label class="radio-inline">
+                                    <input type="radio" value="1" v-model="sat.tp.polar" > H
+                                </label></div>
+                    </td>
+
+                    <td>
+                        <button type="button" value="" class="submit btn btn-default" @click="edit_s(sat)"><a href=javascript:void(0) ><i class='glyphicon glyphicon-ok'></i></a></button>
+                        <button type="button" value="" class="remove btn btn-default" @click="remove_s(sat._id, i)"><a href=javascript:void(0)><i class='glyphicon glyphicon-remove'></i></a></button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
 
         <table class="table table-bordered">
             <caption>
-                <div id='info' class="alert alert-success" role="alert" hidden=true>
-                </div>
+
             </caption>
             <thead>
-                <tr>
+                <tr class="bg-primary">
                     <th>#</th>
                     <th>Location</th>
-                    <th>Mac </th>
-                    <th>IP </th>
+                    <th>Device </th>
                     <th>Status</th>
-
                     <th>Attenuation</th>
                     <th>Antenna</th>
-
                     <th>Action</th>
                 </tr>
             </thead>
@@ -35,27 +91,40 @@
                         {{i}}
                     </th>
                     <td>
-                        {{data.loc_s}}
+                        {{data.loc.name}}
                     </td>
                     <td>
-                        {{data.mac}}
-                    </td>
-                    <td>
-                        {{data.ip}}
+                        <div class="row">
+                            <div class="col-md-2"> <label>Mac</label></div>
+                            <div class="col-md-8"> <span class="text-muted">{{data.mac}}</span></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-2"> <label>IP</label></div>
+                            <div class="col-md-8"> <span class="text-muted">{{data.ip}}</span></div>
+                        </div>
                     </td>
                     <td>
                         <span class="label label-primary">{{data.active ? 'ON' : 'OFF'}}</span>
                     </td>
-
                     <td>
                         <div class="row">
-                            <div class="col-md-4"> <label>Local</label></div>
-                            <div class="col-md-8"> <span class="text-muted">{{ data.status && data.status.snr}}</span> db</div>
-                        </div>
+                            <div class="col-md-4"> <label>Snr</label></div>
 
+                            <div class="col-md-8 form-inline">
+                                <span class="text-muted">{{ data.status.snr}}</span>
+                                <strong>+</strong>
+                                <input type="number" class="form-control" min="-3" max="3" step="0.5" v-model.number="data.att.factor" style="max-width:80px">
+                                <strong>=</strong>
+                                <span class="text-primary ">{{ data.status.snr && (data.status.snr + data.att.factor)}}</span>                                db
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4"> <label>Attenuator</label></div>
+                            <div class="col-md-8"> <span class="text-muted">{{ data.status.attenuator}}</span> db</div>
+                        </div>
                         <div class="row">
                             <div class="col-md-4"> <label>Target</label></div>
-                            <div class="col-md-8 form-inline">
+                            <div class="col-md-8">
                                 <input type="number" class="form-control" min="1" max="30" step="0.5" v-model.number="data.att.aim" :disabled="!data.att.manual">
                             </div>
                         </div>
@@ -63,10 +132,9 @@
                         <div class="row">
                             <div class="col-md-4"> <label>Step</label></div>
                             <div class="col-md-8">
-                                <input type="number" class="form-control" min="0.25" max="3" step="0.25" v-model.number="data.att.step">
+                                <input type="number" class="form-control" min="0.5" max="3" step="0.5" v-model.number="data.att.step">
                             </div>
                         </div>
-
 
                         <div class="row">
                             <div class="col-md-4"> <label>Interval</label></div>
@@ -76,7 +144,7 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-4"> <label>Manual</label></div>
+                            <div class="col-md-4"><label>Manual</label></div>
                             <div class="col-md-8">
                                 <input type="checkbox" v-model="data.att.manual">
                             </div>
@@ -84,41 +152,22 @@
                     </td>
 
                     <td>
-                        <div class="row">
-                            <div class="col-md-3"> <label>Local</label></div>
-                            <div class="col-md-9"> <span class="text-muted">{{ data.status && data.status.antenna}}</span></div>
-                        </div>
-
                         <div v-show="data.antenna.manual">
                             <div class="row">
-                                <div class="col-md-3"> <label>LNB Type</label></div>
+                                <div class="col-md-3"><label>Status</label></div>
                                 <div class="col-md-9">
-                                    <select class="form-control" v-model="data.antenna.lnb.type">
-                                    <option value=0>C Band</option>
-                                    <option value=1>KU Band</option>
-                                </select>
+                                    <span class="text-muted">{{data.ss}}</span>
+                                    <i class='glyphicon' v-bind:class="[data.status.antenna.locked ? 'glyphicon-ok-sign' : 'glyphicon-remove-sign' ]"></i>
                                 </div>
                             </div>
 
                             <div class="row">
-                                <div class="col-md-3"> <label>LNB Freq</label></div>
-                                <div class="col-md-9 form-inline">
-                                    <input type="number" class="form-control" style="width:90px" v-model.number="data.antenna.lnb.freq_l">                                    /
-                                    <input type="number" class="form-control" style="width:90px" v-model.number="data.antenna.lnb.freq_h">
+                                <div class="col-md-3"><label>Satellite</label></div>
+                                <div class="col-md-9">
+                                    <select class="form-control" v-model="data.antenna.satellite" @change="sat_change(data)">
+                                        <option v-for="s in sats" v-bind:value="s._id">{{s.name}}</option>
+                                    </select>
                                 </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-3"> <label>Transponder</label></div>
-                                <div class="col-md-9 form-inline">
-                                    <input type="number" class="form-control" style="width:90px" v-model.number="data.antenna.tp.freq">                                    /
-                                    <input type="number" class="form-control" style="width:90px" v-model.number="data.antenna.tp.rate">
-                                    <label class="radio-inline">
-                                    <input type="radio" value=0 v-model="data.antenna.tp.polar" > V
-                                </label>
-                                    <label class="radio-inline">
-                                    <input type="radio" value="1" v-model="data.antenna.tp.polar" > H
-                                </label></div>
                             </div>
                         </div>
 
@@ -138,23 +187,117 @@
             </tbody>
         </table>
 
+
+
     </div>
 
     <script>
+        function show_info(e, d) {
+            if (e) {
+                $('#info').addClass('alert-danger').slideDown()
+                    .text(e).slideDown();;
+            }
+            else {
+                $('#info').removeClass('alert-danger').addClass('alert-success')
+                    .text(d).slideDown();
+            }
+            setTimeout(() => $('#info').fadeOut(), 1200)
+        }
+
         var app = new Vue({
             el: '#app',
-            data: {
-                datas: []
+            data() {
+                return {
+                    datas: [],
+                    sats: [],
+                    temp_s: [],
+                }
             },
-            created: function () {
+            mounted: function () {
                 this.featchList();
-                setInterval(this.update, 5000)
+                // setInterval(this.update, 5000)
+            },
+            computed: {
+
             },
             methods: {
                 featchList: function () {
-                    $.getJSON('/web/qos/list', res => {
-                        this.datas = res;
+                    $.getJSON('/web/sat/list', res => {
+                        this.sats = res
+                        this.temp_s = res.slice(0)
                     })
+
+                    $.getJSON('/web/qos/list', res => {
+                        res.forEach(d => this.sat_change(d))
+                        this.datas = res
+                    })
+                },
+                open_s: function (e) {
+                    $(e.target).toggleClass('glyphicon-chevron-down glyphicon-chevron-up')
+                    $('#sat').toggle();
+                },
+
+                add: function () {
+                    this.temp_s.push({
+                        name: '',
+                        lnb: { type: 0, freq_l: 0, freq_h: 0 },
+                        tp: { freq: 0, rate: 0, polar: 0 }
+                    })
+                },
+
+                edit_s: function (s) {
+                    $.ajax({
+                        type: "post",
+                        url: '/web/sat/edit',
+                        data: JSON.stringify(s),
+                        contentType: "application/json",
+                        dataType: 'json',
+                        error: () => show_info('Edit fail!'),
+                        success: (d) => {
+                            if (d.err) {
+                                return show_info(d.err)
+                            }
+
+                            if (!s._id) {
+                                s._id = d._id
+                                this.sats.push(s);
+                            }
+
+                            this.datas.forEach(e => {
+                                if (e.antenna.satellite == s._id) {
+                                    this.sat_change(e)
+                                }
+                            })
+                            show_info(null, "Edit success!")
+                        }
+                    });
+                },
+
+                remove_s: function (id, i) {
+                    this.temp_s.splice(i, 1);
+                    if (id) {
+                        $.ajax({
+                            type: "post",
+                            url: '/web/sat/del/' + id,
+                            error: () => show_info('Delete fail!'),
+                            success: () => {
+                                this.sats = this.sats.filter(e => e._id !== id)
+                                show_info(null, "Delete success!")
+                            }
+                        });
+                    }
+                },
+                sat_change: function (data) {
+                    var id = data.antenna.satellite
+                    var s = this.sats.find(s => s._id == id)
+                    if (s) {
+                        var t = s.lnb.type == 0 ? 'C' : 'Ku'
+                        var p = s.tp.pola == 0 ? 'V' : 'H'
+                        data.ss = `(${t}, ${s.lnb.freq_l}/${s.lnb.freq_h}, ${s.tp.freq}/${s.tp.rate}/${p})`
+                    }
+                    else {
+                        data.ss = '';
+                    }
                 },
 
                 update: function () {
@@ -179,7 +322,7 @@
                         data: JSON.stringify(obj),
                         contentType: "application/json",
                         dataType: 'json',
-                        error: () => alert('setting fail!'),
+                        error: () => show_info('Edit fail!'),
                         success: () => {
                             $('#info').text("Edit success!").slideDown();
                             setTimeout(() => $('#info').fadeOut(), 1000)
@@ -191,7 +334,7 @@
                     $.ajax({
                         type: "post",
                         url: '/web/qos/del/' + id,
-                        error: () => alert('setting fail!'),
+                        error: () => show_info('Delete fail!'),
                         success: () => {
                             $(`tbody tr:eq(${i})`).remove();
                             $('#info').text('Delete success!').slideDown();
@@ -209,12 +352,19 @@
             margin-right: 200px
         }
 
+        @media screen and (max-width: 1366px) {
+            #app {
+                margin-left: 20px;
+                margin-right: 20px
+            }
+        }
+
         #info {
             position: fixed;
-            top: 50px;
-            right: 0;
+            top: 55px;
+            left: 30%;
             text-align: center;
-            width: 300px;
+            width: 40%;
             height: 50px;
         }
 

@@ -196,31 +196,11 @@ define({ "api": [
     "groupTitle": "PEER"
   },
   {
-    "type": "get",
+    "type": "post",
     "url": "/query",
-    "title": "get attenuation",
-    "name": "getAtt",
+    "title": "query attenuation and antenna status",
+    "name": "postAtt",
     "group": "QOS",
-    "parameter": {
-      "fields": {
-        "Parameter": [
-          {
-            "group": "Parameter",
-            "type": "Number",
-            "optional": false,
-            "field": "l",
-            "description": "<p>local snr value</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "m",
-            "description": "<p>mac address</p>"
-          }
-        ]
-      }
-    },
     "success": {
       "fields": {
         "Success 200": [
@@ -240,36 +220,29 @@ define({ "api": [
           },
           {
             "group": "Success 200",
-            "type": "Number",
+            "type": "Object",
             "optional": false,
-            "field": "att_aim",
-            "description": "<p>target snr/db.</p>"
+            "field": "att",
+            "description": "<p>att detail.</p>"
           },
           {
             "group": "Success 200",
-            "type": "Number",
-            "optional": false,
-            "field": "att_step",
-            "description": "<p>att step/db.</p>"
-          },
-          {
-            "group": "Success 200",
-            "type": "Number",
-            "optional": false,
-            "field": "att_inv",
-            "description": "<p>att interval/seconds.</p>"
+            "type": "Object",
+            "optional": true,
+            "field": "antenna",
+            "description": "<p>antenna setting params.</p>"
           }
         ]
       },
       "examples": [
         {
           "title": "Success-Response-ok:",
-          "content": "HTTP/1.1 200 OK\n{\n  \"next\": 10, \n  \"att_aim\": 3,\n  \"att_step\": 0.25,\n  \"att_inv\": 5\n}",
+          "content": "HTTP/1.1 200 OK\n{\n  \"next\": 10, \n  \"att\": {\n     \"aim\": 3,\n     \"step\": 0.5,\n     \"inv\": 5,\n  },\n  \"antenna\": {\n     \"lnb\": {\n         \"freq\": 196608005,\n         \"type\": 0\n     },\n     \"tp\": {\n         \"polar\": 0,\n         \"rate\": 5,\n         \"freq\": 9\n     }\n  }\n}",
           "type": "json"
         },
         {
-          "title": "Success-Response-sleep:",
-          "content": "HTTP/1.1 200 OK\n{\n  \"next\": 3600    \n}",
+          "title": "Success-Response-ok2:",
+          "content": "HTTP/1.1 200 OK\n{\n  \"next\": 10, \n  \"att\": {\n     \"aim\": 3,\n     \"step\": 0.5,\n     \"inv\": 5,\n  }",
           "type": "json"
         },
         {

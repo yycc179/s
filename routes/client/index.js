@@ -36,6 +36,7 @@ if (process.env.NODE_ENV == 'production') {
 router.use('/stats', require('./stats'));
 router.use('/setting', require('./setting'));
 router.use('/qos', require('./qos'));
+router.use('/sat', require('./sat'));
 
 module.exports = router;
 

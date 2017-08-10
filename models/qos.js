@@ -7,43 +7,31 @@ const schema = Schema({
     mac: { type: String, index: true, unique: true },
     ip: { type: String },
 
-    updatedAt: {type: Date, default: Date.now},
+    updatedAt: { type: Date, default: Date.now },
 
     loc: { type: Schema.Types.ObjectId, ref: 'country' },
-    loc_s: { type: String },
-
-//old start, 
-    att_aim: { type: Number, default: 3 },  
-    att_inv: { type: Number, default: 5 },
-    att_step: { type: Number, default: 0.25 },
-
-    snr_local: Number,
-    manual: { type: Boolean, default: false },
-//old end
+    // loc_s: { type: String },
 
     att: {
         manual: { type: Boolean, default: false },
+        factor: { type: Number, default: 0 },
         aim: { type: Number, default: 3 },
         inv: { type: Number, default: 5 },
-        step:  { type: Number, default: 0.25 },
+        step: { type: Number, default: 0.5 },
     },
 
     antenna: {
         manual: { type: Boolean, default: false },
-        lnb: {
-            type: { type: Number, default: 0 },
-            freq: { type: Number, default: 0 }
-        },
-        tp: {
-            freq: { type: Number, default: 0 },
-            rate: { type: Number, default: 0 },
-            polar: { type: Number, default: 0 },
-        },
+        satellite: { type: String, ref: 'sat' },
+
     },
 
     status: {
         snr: Number,
-        antenna: String,
+        attenuator: Number,
+        antenna: {
+            locked: { type: Boolean, default: false },
+        },
     }
 });
 
