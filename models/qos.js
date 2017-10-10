@@ -13,7 +13,6 @@ const schema = Schema({
 
     att: {
         factor: { type: Number, default: 0 },
-        aim: { type: Number, default: 3 },
         inv: { type: Number, default: 5 },
         step: { type: Number, default: 0.5 },
         snr_aim: { type: Number, default: 3 },
