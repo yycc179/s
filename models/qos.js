@@ -10,20 +10,20 @@ const schema = Schema({
     updatedAt: { type: Date, default: Date.now },
 
     loc: { type: Schema.Types.ObjectId, ref: 'country' },
-    // loc_s: { type: String },
 
     att: {
-        manual: { type: Boolean, default: false },
         factor: { type: Number, default: 0 },
         aim: { type: Number, default: 3 },
         inv: { type: Number, default: 5 },
         step: { type: Number, default: 0.5 },
+        snr_aim: { type: Number, default: 3 },
+        att_aim: { type: Number, default: 3 },
+        mode: { type: Number, default: 0 },
     },
 
     antenna: {
         manual: { type: Boolean, default: false },
         satellite: { type: String, ref: 'sat' },
-
     },
 
     status: {

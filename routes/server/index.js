@@ -274,9 +274,12 @@ router.post('/query', (req, res, next) => {
     }
 
     let config
-    var out = {}
+    const out = {}
     Promise.join(client.hgetallAsync('config'),
-        Qos.findOneAndUpdate({ mac }, { status, updatedAt: Date.now() }).populate('antenna.satellite', '-_id lnb tp').lean().exec(),
+        Qos.findOneAndUpdate({ mac }, { status, updatedAt: Date.now() })
+            .populate('antenna.satellite', '-_id lnb tp')
+            .lean()
+            .exec(),
         (obj, doc) => {
             config = obj;
             var loc = doc && doc.loc;
@@ -286,17 +289,11 @@ router.post('/query', (req, res, next) => {
                 return Promise.reject(e);
             }
             out.next = parseInt(config.next_query)
-
-            var manual = doc.att.manual
-            delete doc.att.manual
             out.att = doc.att
             if (doc.antenna.manual && doc.antenna.satellite) {
-                out.antenna = {
-                    lnb: doc.antenna.satellite.lnb,
-                    tp: doc.antenna.satellite.tp
-                }
+                out.antenna = doc.antenna.satellite
             }
-            if (manual) {
+            if (doc.att.mode != 0) {
                 res.json(out)
                 return Promise.reject();
             }
@@ -321,8 +318,7 @@ router.post('/query', (req, res, next) => {
                 out.err = 'no snr'
                 return res.json(out)
             }
-            const { snr } = docs[parseInt(docs.length * config.factor)];
-            out.att.aim = snr;
+            out.att.snr_aim = docs[parseInt(docs.length * config.factor)].snr;
             res.json(out)
         })
         .catch(e => {

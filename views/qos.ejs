@@ -96,11 +96,11 @@
                     <td>
                         <div class="row">
                             <div class="col-md-2"> <label>Mac</label></div>
-                            <div class="col-md-8"> <span class="text-muted">{{data.mac}}</span></div>
+                            <div class="col-md-9"> <span class="text-muted">{{data.mac}}</span></div>
                         </div>
                         <div class="row">
                             <div class="col-md-2"> <label>IP</label></div>
-                            <div class="col-md-8"> <span class="text-muted">{{data.ip}}</span></div>
+                            <div class="col-md-9"> <span class="text-muted">{{data.ip}}</span></div>
                         </div>
                     </td>
                     <td>
@@ -108,49 +108,60 @@
                     </td>
                     <td>
                         <div class="row">
-                            <div class="col-md-4"> <label>VSAT Snr</label></div>
+                            <div class="col-md-3"> <label>VSAT SNR</label></div>
 
-                            <div class="col-md-8 form-inline">
+                            <div class="col-md-9 form-inline">
                                 <span class="text-muted">{{ data.status.snr}}</span>
                                 <strong>+</strong>
                                 <input type="number" class="form-control" min="-3" max="3" step="0.5" v-model.number="data.att.factor" style="max-width:80px">
                                 <strong>=</strong>
-                                <span class="text-primary ">{{ data.status.snr && (data.status.snr + (data.att.factor || 0)).toFixed(2)}}</span> db
+                                <span class="text-primary ">{{ data.status.snr && (data.status.snr + (data.att.factor || 0)).toFixed(2)}}</span>                                db
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-md-4"> <label>Attenuator</label></div>
-                            <div class="col-md-8"> <span class="text-muted">{{ data.status.attenuator}}</span> db</div>
+                            <div class="col-md-3"> <label>Attenuator</label></div>
+                            <div class="col-md-9"> <span class="text-muted">{{ data.status.attenuator}}</span> db</div>
                         </div>
                         <div class="row">
-                            <div class="col-md-4"> <label>Target</label></div>
-                            <div class="col-md-8">
-                                <input type="number" class="form-control" min="1" max="30" step="0.5" v-model.number="data.att.aim" :disabled="!data.att.manual">
+                            <div class="col-md-3"> <label>ATT Target</label></div>
+                            <div class="col-md-9">
+                                <input type="number" class="form-control" min="1" max="30" step="0.5" v-model.number="data.att.att_aim" :disabled="data.att.mode!=2">
                             </div>
                         </div>
-
                         <div class="row">
-                            <div class="col-md-4"> <label>Step</label></div>
-                            <div class="col-md-8">
-                                <input type="number" class="form-control" min="0.5" max="3" step="0.5" v-model.number="data.att.step">
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-4"> <label>Interval</label></div>
-                            <div class="col-md-8">
-                                <input type="number" class="form-control" min="5" max="30" step="1" v-model.number="data.att.inv">
+                            <div class="col-md-3"> <label>SNR Target</label></div>
+                            <div class="col-md-9">
+                                <input type="number" class="form-control" min="1" max="30" step="0.5" v-model.number="data.att.snr_aim" :disabled="data.att.mode!=1">
                             </div>
                         </div>
 
                         <div class="row">
-                            <div class="col-md-4"><label>Manual</label></div>
-                            <div class="col-md-8">
-                                <input type="checkbox" v-model="data.att.manual">
+                            <div class="col-md-3"> <label>Step</label></div>
+                            <div class="col-md-9">
+                                <input type="number" class="form-control" min="0.5" max="3" step="0.5" v-model.number="data.att.step" :disabled="data.att.mode==2">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3"> <label>Interval</label></div>
+                            <div class="col-md-9">
+                                <input type="number" class="form-control" min="5" max="30" step="1" v-model.number="data.att.inv" :disabled="data.att.mode==2">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3"><label>Mode</label></div>
+                            <div class="col-md-9">
+                                <label class="radio-inline">
+                                            <input type="radio" id="m1" value=0 v-model="data.att.mode"> Auto
+                                          </label>
+                                <label class="radio-inline">
+                                            <input type="radio" id="m2" value=1 v-model="data.att.mode"> Semi-Auto
+                                          </label>
+                                <label class="radio-inline">
+                                            <input type="radio" id="m3" value=2 v-model="data.att.mode"> Manual                                            
+                                          </label>
                             </div>
                         </div>
                     </td>
-
                     <td>
                         <div v-show="data.antenna.manual">
                             <div class="row">
@@ -170,7 +181,6 @@
                                 </div>
                             </div>
                         </div>
-
                         <div class="row">
                             <div class="col-md-3"> <label>Manual</label></div>
                             <div class="col-md-9">
@@ -178,7 +188,6 @@
                             </div>
                         </div>
                     </td>
-
                     <td>
                         <button type="button" value="" class="submit btn btn-default" @click="edit(data)"><a href=javascript:void(0) ><i class='glyphicon glyphicon-ok'></i></a></button>
                         <button type="button" value="" class="remove btn btn-default" @click="remove(data._id, i)"><a href=javascript:void(0)><i class='glyphicon glyphicon-remove'></i></a></button>
@@ -186,20 +195,17 @@
                 </tr>
             </tbody>
         </table>
-
-
-
     </div>
 
     <script>
         function show_info(e, d) {
             if (e) {
                 $('#info').addClass('alert-danger').slideDown()
-                    .text(e).slideDown();;
+                    .text(e).slideDown()
             }
             else {
                 $('#info').removeClass('alert-danger').addClass('alert-success')
-                    .text(d).slideDown();
+                    .text(d).slideDown()
             }
             setTimeout(() => $('#info').fadeOut(), 1200)
         }
@@ -213,12 +219,9 @@
                     temp_s: [],
                 }
             },
-            mounted: function () {
+            created: function () {
                 this.featchList();
                 setInterval(this.update, 5000)
-            },
-            computed: {
-
             },
             methods: {
                 featchList: function () {
@@ -302,6 +305,9 @@
 
                 update: function () {
                     $.getJSON('/web/qos/status', res => {
+                        if (res.length != this.datas.length) {
+                            return this.featchList();
+                        }
                         res.forEach((data, i) => {
                             for (k in data) {
                                 this.datas[i][k] = data[k];
@@ -336,7 +342,8 @@
                         url: '/web/qos/del/' + id,
                         error: () => show_info('Delete fail!'),
                         success: () => {
-                            $(`tbody tr:eq(${i})`).remove();
+                            //$(`tbody tr:eq(${i})`).remove();
+                            this.datas.splice(i, 1)
                             $('#info').text('Delete success!').slideDown();
                             setTimeout(() => $('#info').fadeOut(), 1000)
                         }
@@ -373,7 +380,7 @@
         }
 
         .row {
-            margin-bottom: 10px
+            margin-bottom: 5px
         }
 
         input[type=checkbox] {
