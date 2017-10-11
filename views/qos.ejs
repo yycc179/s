@@ -149,7 +149,7 @@
                         </div>
                         <div class="row">
                             <div class="col-md-3"><label>Mode</label></div>
-                            <div class="col-md-9">
+                            <div class="col-md-9" style="font-size:15px">
                                 <label class="radio-inline">
                                             <input type="radio" id="m1" value=0 v-model="data.att.mode"> Auto
                                           </label>
@@ -355,8 +355,7 @@
 
     <style>
         #app {
-            margin-left: 200px;
-            margin-right: 200px
+            margin: 0 200px 50px
         }
 
         @media screen and (max-width: 1366px) {
@@ -387,7 +386,10 @@
             width: 18px;
             height: 18px
         }
-
+        input[type=checkbox] {
+            width: 18px;
+            height: 18px
+        }
         .loading {
             width: 60px;
             height: 60px;
