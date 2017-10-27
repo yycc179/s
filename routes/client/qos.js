@@ -26,7 +26,7 @@ router.post('/del/:id', (req, res, next) => {
 
 function wrapper_data(docs, next_query) {
     var now = new Date();
-    now.setSeconds(now.getSeconds() - next_query - 5);
+    now.setSeconds(now.getSeconds() - 2*next_query);
     docs.map(d => {
         d.active = (d.updatedAt > now)
         delete d.updatedAt
