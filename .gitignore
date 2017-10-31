@@ -5,6 +5,7 @@
 # *.[oa]
 # *~
 node_modules
+public/upgrade
 *.bak
 .vscode
 npm-debug.log

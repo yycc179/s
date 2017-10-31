@@ -37,6 +37,7 @@ router.use('/stats', require('./stats'));
 router.use('/setting', require('./setting'));
 router.use('/qos', require('./qos'));
 router.use('/sat', require('./sat'));
+router.use('/upgrade', require('./upgrade'));
 
 module.exports = router;
 

@@ -1,0 +1,40 @@
+<%include header%>
+
+<link href="//cdn.bootcss.com/bootstrap-fileinput/4.4.5/css/fileinput.css" rel="stylesheet">
+<script src="//cdn.bootcss.com/bootstrap-fileinput/4.4.5/js/fileinput.js"></script>
+
+<div id="app" class="container">
+
+<label class="control-label">Select Bin or meta.json</label>
+<input type="file" name="meta" id="meta" multiple/>
+</div>
+
+<script>
+    $("#meta").fileinput({uploadUrl: '/web/upgrade/meta',
+                maxFileSize: 20000,
+                dropZoneEnabled: false,
+                maxFileCount: 2,
+                allowedFileExtensions: ['json', 'bin'],
+                slugCallback: function (filename) {
+                    var ex = filename.substring(filename.lastIndexOf("."), filename.length);
+                    if (ex == '.json') {
+                        return 'meta.json';
+                    }
+                    else if(ex == '.bin'){
+                        return 'rom.bin';
+                    }
+                    else {
+                        alert('Not support!');
+                        return -1;
+                    }
+                }}
+    );
+
+    $('#meta').on('fileuploaded', function(e, d) {
+        if(d.filenames[0] == 'meta.json') {
+            window.location.reload();
+        }
+        
+    })
+</script>
+
