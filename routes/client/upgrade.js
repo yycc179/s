@@ -40,12 +40,9 @@ var storage = multer.diskStorage({
 var upload = multer({ storage: storage }).array('meta', 2);
 
 router.get('/', function (req, res) {
-    // fs.readFile('./public/upgrade/meta.json', 'utf8', function (err, data) {
-        res.render('upload', {
-            title: 'Upgrade',
-            meta: err ? {} : JSON.parse(data),
-            user: null
-        // });
+    res.render('upload', {
+        title: 'upgrade',
+        user: req.user
     });
 
 });
