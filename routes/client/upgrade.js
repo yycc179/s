@@ -17,7 +17,6 @@ var fs = require('fs');
 
 var storage = multer.diskStorage({
     destination: function (req, file, callback) {
-        console.log(req.query)
         const { customer, time } = req.query
         var path = './public/upgrade/' + customer;
         if (!fs.existsSync(path)) {
@@ -31,13 +30,6 @@ var storage = multer.diskStorage({
         callback(null, file.originalname);
     }
 });
-
-//var upload = multer({ storage: storage }).fields(
-//    [
-//        { name: 'meta'},
-//        { name: 'bin' }
-//    ]
-//);
 
 var upload = multer({ storage }).array('meta', 1);
 

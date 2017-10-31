@@ -10,44 +10,64 @@
 
         <div style="margin:20px 0">
             <label>Customer</label>
-            <select class="form-control" v-model='customer'>
-                <option value='availink'>Availink</option>
-                <option value='daqi'>Daqi</option>
-                <option value='redline'>RedLine</option>
+            <select class="form-control" v-model='cur_customer' @change='cus_change'>
+                <option v-for='(c, i) in CUSTOMERS' v-bind:value='i'>{{c.key}}</option>
             </select>
         </div>
         <div>
             <label>Complie time 
             </label>
             <div class="form-inline">
-                <input type="date" class="form-control" v-model='date'/>
-                <input type="time" class="form-control" v-model='time'/>
+                <input type="date" class="form-control" v-model='date' />
+                <input type="time" class="form-control" v-model='time' />
             </div>
         </div>
 
     </div>
 
     <script>
+        const CUSTOMERS = [
+            { key: 'Availink', val: 'availink' },
+            { key: 'Daqi', val: 'daqi' },
+            { key: 'Redline', val: 'redline' }
+        ]
+
+        Date.prototype.format = function (fmt) { //author: meizz 
+            var o = {
+                "M+": this.getMonth() + 1, //月份 
+                "d+": this.getDate(), //日 
+                "h+": this.getHours(), //小时 
+                "m+": this.getMinutes(), //分 
+                "s+": this.getSeconds(), //秒 
+                "q+": Math.floor((this.getMonth() + 3) / 3), //季度 
+                "S": this.getMilliseconds() //毫秒 
+            };
+            if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+            for (var k in o)
+                if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+            return fmt;
+        }
+
         var app = new Vue({
             el: '#app',
             data() {
                 var d = new Date()
                 return {
-                    customer: 'availink',
+                    cur_customer: 0,
+                    CUSTOMERS,
+                    uploaded: false,
                     msg: '',
-                    date: `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`,
-                    time: `${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`
+                    date: d.format("yyyy-MM-dd"),
+                    time: d.format("hh:mm:ss")
                 }
             },
             mounted() {
-                var h = false
                 var self = this
-
                 $('#meta').fileinput({
-                    uploadUrl: '/web/upgrade/meta',
                     maxFileSize: 20000,
+                    uploadUrl: '/',
                     dropZoneEnabled: false,
-                    maxFileCount: 2,
+                    maxFileCount: 1,
                     allowedFileExtensions: ['json', 'bin'],
                     slugCallback: filename => {
                         this.msg = ''
@@ -64,14 +84,18 @@
                         }
                     },
                     uploadExtraData: function () {
-                        if (!h) {
-                            this.uploadUrl += `?customer=${self.customer}&time=${self.date}T${self.time}`
-                            h = true
+                        if (!self.uploaded) {
+                            this.uploadUrl = `/web/upgrade/meta?customer=${CUSTOMERS[self.cur_customer].val}&time=${self.date}T${self.time}`
+                            self.uploaded = true
                         }
                         return ''
                     }
                 })
+            },
+            methods: {
+                cus_change () {
+                    this.uploaded = false
+                }
             }
         })
-
     </script>
