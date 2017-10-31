@@ -9,23 +9,25 @@ var fs = require('fs');
 
 /* GET home page. */
 
-router.get('/info', function (req, res, next) {
-    // res.redirect('/upgrade/meta.json');
-    res.writeHead(200, { 'Content-type': 'application/json' });
-    fs.createReadStream('public/upgrade/meta.json').pipe(res);
-});
+// router.get('/info', function (req, res, next) {
+//     // res.redirect('/upgrade/meta.json');
+//     res.writeHead(200, { 'Content-type': 'application/json' });
+//     fs.createReadStream('public/upgrade/availink/meta.json').pipe(res);
+// });
 
 var storage = multer.diskStorage({
     destination: function (req, file, callback) {
-        var path = './public/upgrade';
+        console.log(req.query)
+        const { customer, time } = req.query
+        var path = './public/upgrade/' + customer;
         if (!fs.existsSync(path)) {
-            fs.mkdirSync(path);
+            require("mkdirp").sync(path);
         }
-
+        fs.writeFile(path + '/meta.json',
+            JSON.stringify({ updatedAt: time, url: `/upgrade/${customer}/rom.bin` }))
         callback(null, path);
     },
     filename: function (req, file, callback) {
-        console.log(file.originalname)
         callback(null, file.originalname);
     }
 });
@@ -37,14 +39,13 @@ var storage = multer.diskStorage({
 //    ]
 //);
 
-var upload = multer({ storage: storage }).array('meta', 2);
+var upload = multer({ storage }).array('meta', 1);
 
 router.get('/', function (req, res) {
     res.render('upload', {
         title: 'upgrade',
         user: req.user
     });
-
 });
 
 router.post('/meta', function (req, res) {

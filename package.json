@@ -20,6 +20,7 @@
     "express-session": "^1.13.0",
     "geoip-lite": "^1.1.8",
     "jsonwebtoken": "^7.0.1",
+    "mkdirp": "^0.5.1",
     "mongoose": "^4.7.5",
     "mongoose-paginate": "^5.0.3",
     "morgan": "~1.7.0",

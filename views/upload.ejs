@@ -1,39 +1,77 @@
 <%include header%>
 
-<link href="//cdn.bootcss.com/bootstrap-fileinput/4.4.5/css/fileinput.css" rel="stylesheet">
-<script src="//cdn.bootcss.com/bootstrap-fileinput/4.4.5/js/fileinput.js"></script>
+    <link href="//cdn.bootcss.com/bootstrap-fileinput/4.4.5/css/fileinput.css" rel="stylesheet">
+    <script src="//cdn.bootcss.com/bootstrap-fileinput/4.4.5/js/fileinput.js"></script>
+    <script src="https://unpkg.com/vue"></script>
 
-<div id="app" class="container">
+    <div id="app" class="container">
+        <input type="file" name="meta" id="meta" data-msg-placeholder="Select bin file" />
+        <p class="text-danger">{{msg}}</p>
 
-<input type="file" name="meta" id="meta" multiple data-msg-placeholder="Select bin file"/>
-</div>
+        <div style="margin:20px 0">
+            <label>Customer</label>
+            <select class="form-control" v-model='customer'>
+                <option value='availink'>Availink</option>
+                <option value='daqi'>Daqi</option>
+                <option value='redline'>RedLine</option>
+            </select>
+        </div>
+        <div>
+            <label>Complie time 
+            </label>
+            <div class="form-inline">
+                <input type="date" class="form-control" v-model='date'/>
+                <input type="time" class="form-control" v-model='time'/>
+            </div>
+        </div>
 
-<script>
-    $("#meta").fileinput({uploadUrl: '/web/upgrade/meta',
-                maxFileSize: 20000,
-                // dropZoneEnabled: false,
-                maxFileCount: 2,
-                allowedFileExtensions: ['json', 'bin'],
-                slugCallback: function (filename) {
-                    var ex = filename.substring(filename.lastIndexOf("."), filename.length);
-                    if (ex == '.json') {
-                        return 'meta.json';
+    </div>
+
+    <script>
+        var app = new Vue({
+            el: '#app',
+            data() {
+                var d = new Date()
+                return {
+                    customer: 'availink',
+                    msg: '',
+                    date: `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`,
+                    time: `${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`
+                }
+            },
+            mounted() {
+                var h = false
+                var self = this
+
+                $('#meta').fileinput({
+                    uploadUrl: '/web/upgrade/meta',
+                    maxFileSize: 20000,
+                    dropZoneEnabled: false,
+                    maxFileCount: 2,
+                    allowedFileExtensions: ['json', 'bin'],
+                    slugCallback: filename => {
+                        this.msg = ''
+                        var ex = filename.substring(filename.lastIndexOf("."), filename.length);
+                        if (ex == '.json') {
+                            return 'meta.json';
+                        }
+                        else if (ex == '.bin') {
+                            return 'rom.bin';
+                        }
+                        else {
+                            this.msg = 'Invalid file!'
+                            return '';
+                        }
+                    },
+                    uploadExtraData: function () {
+                        if (!h) {
+                            this.uploadUrl += `?customer=${self.customer}&time=${self.date}T${self.time}`
+                            h = true
+                        }
+                        return ''
                     }
-                    else if(ex == '.bin'){
-                        return 'rom.bin';
-                    }
-                    else {
-                        alert('Not support!');
-                        return -1;
-                    }
-                }}
-    );
+                })
+            }
+        })
 
-    $('#meta').on('fileuploaded', function(e, d) {
-        if(d.filenames[0] == 'meta.json') {
-            window.location.reload();
-        }
-        
-    })
-</script>
-
+    </script>
