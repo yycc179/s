@@ -5,14 +5,13 @@
 
 <div id="app" class="container">
 
-<label class="control-label">Select Bin or meta.json</label>
-<input type="file" name="meta" id="meta" multiple/>
+<input type="file" name="meta" id="meta" multiple data-msg-placeholder="Select bin file"/>
 </div>
 
 <script>
     $("#meta").fileinput({uploadUrl: '/web/upgrade/meta',
                 maxFileSize: 20000,
-                dropZoneEnabled: false,
+                // dropZoneEnabled: false,
                 maxFileCount: 2,
                 allowedFileExtensions: ['json', 'bin'],
                 slugCallback: function (filename) {
