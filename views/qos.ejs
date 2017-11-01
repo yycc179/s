@@ -18,9 +18,11 @@
                 <tr class="bg-info">
                     <th>#</th>
                     <th>Sat Name</th>
-                    <th>LNB Type </th>
-                    <th>LNB Freq </th>
-                    <th>Transponder </th>
+                    <th>LNB Type</th>
+                    <th>LNB Freq</th>
+                    <th>Transponder</th>
+                    <th>22KHz</th>
+                    <th>DiSEqC 1.0</th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -40,9 +42,8 @@
                                 </select>
 
                     </td>
-
                     <td>
-                        <div class="form-inline">
+                        <div class="form-inline" style="max-width:100px">
                             <input type="number" class="form-control" v-model.number="sat.lnb.freq_l"> /
                             <input type="number" class="form-control" v-model.number="sat.lnb.freq_h">
                         </div>
@@ -50,17 +51,33 @@
                     </td>
 
                     <td>
-                        <div class="form-inline">
-                            <input type="number" class="form-control" v-model.number="sat.tp.freq"> /
-                            <input type="number" class="form-control" v-model.number="sat.tp.rate">
-                            <label class="radio-inline">
-                                    <input type="radio" value=0 v-model="sat.tp.polar" > V
-                                </label>
-                            <label class="radio-inline">
-                                    <input type="radio" value="1" v-model="sat.tp.polar" > H
-                                </label></div>
+                        <input type="number" class="form-control" v-model.number="sat.tp.freq"> /
+                        <input type="number" class="form-control" v-model.number="sat.tp.rate">
+                        <label class="radio-inline">
+                                <input type="radio" value=0 v-model="sat.tp.polar" > V
+                            </label>
+                        <label class="radio-inline">
+                                <input type="radio" value=1 v-model="sat.tp.polar" > H
+                            </label>
                     </td>
-
+                    <td>
+                        <div class="form-inline">
+                            <label class="radio-inline">
+                                <input type="radio" value=true v-model="sat.k22" > On
+                            </label>
+                            <label class="radio-inline">
+                                <input type="radio" value=false v-model="sat.k22" > Off
+                            </label>
+                        </div>
+                    </td>
+                    <td>
+                        <select class="form-control" v-model="sat.disc10" style="max-width:100px">
+                            <option value=0>A</option>
+                            <option value=1>B</option>
+                            <option value=2>C</option>
+                            <option value=3>D</option>
+                        </select>
+                    </td>
                     <td>
                         <button type="button" value="" class="submit btn btn-default" @click="edit_s(sat)"><a href=javascript:void(0) ><i class='glyphicon glyphicon-ok'></i></a></button>
                         <button type="button" value="" class="remove btn btn-default" @click="remove_s(sat._id, i)"><a href=javascript:void(0)><i class='glyphicon glyphicon-remove'></i></a></button>
@@ -386,9 +403,9 @@
             width: 18px;
             height: 18px
         }
-        input[type=checkbox] {
-            width: 18px;
-            height: 18px
+        
+        #sat input[type=number] {
+            max-width: 100px;
         }
         .loading {
             width: 60px;

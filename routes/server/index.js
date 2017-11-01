@@ -277,7 +277,7 @@ router.post('/query', (req, res, next) => {
     const out = {}
     Promise.join(client.hgetallAsync('config'),
         Qos.findOneAndUpdate({ mac }, { status, updatedAt: Date.now() })
-            .populate('antenna.satellite', '-_id lnb tp')
+            .populate('antenna.satellite', '-_id -name -__v')
             .lean()
             .exec(),
         (obj, doc) => {

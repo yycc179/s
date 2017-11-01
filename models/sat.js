@@ -13,7 +13,8 @@ const schema = Schema({
         rate: { type: Number, default: 0 },
         polar: { type: Number, default: 0 },
     },
-
+    k22: {type: Boolean, default: false},
+    disc10: {type: Number, default: 0},
 });
 
 module.exports = db.model('sat', schema)
