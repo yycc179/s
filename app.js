@@ -8,7 +8,8 @@ app.set('x-powered-by', false)
 app.set('views', 'views');
 app.set('view engine', 'ejs');
 
-app.use(require('morgan')('dev'));
+var mr = require('morgan')
+app.use(mr(':method :url :status :res[content-length] - :response-time ms :date[iso]'));
 app.use(express.static('public'))
 
 app.use(bodyParser.json());
