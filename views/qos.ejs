@@ -242,14 +242,18 @@
             },
             methods: {
                 featchList: function () {
-                    $.getJSON('/web/sat/list', res => {
-                        this.sats = res
-                        this.temp_s = res.slice(0)
+                    let p = new Promise((resolve, reject) => {
+                        $.getJSON('/web/sat/list', res => {
+                            this.sats = res
+                            this.temp_s = res.slice(0)
+                            resolve()
+                        })
                     })
-
                     $.getJSON('/web/qos/list', res => {
-                        res.forEach(d => this.sat_change(d))
-                        this.datas = res
+                        p.then(() => {
+                            res.forEach(d => this.sat_change(d))
+                            this.datas = res
+                        })
                     })
                 },
                 open_s: function (e) {
@@ -312,8 +316,9 @@
                     var s = this.sats.find(s => s._id == id)
                     if (s) {
                         var t = s.lnb.type == 0 ? 'C' : 'Ku'
-                        var p = s.tp.pola == 0 ? 'V' : 'H'
-                        data.ss = `(${t}, ${s.lnb.freq_l}/${s.lnb.freq_h}, ${s.tp.freq}/${s.tp.rate}/${p})`
+                        var p = s.tp.polar == 0 ? 'V' : 'H'
+                        var k22 = s.k22 ? 'On' : 'Off'
+                        data.ss = `(${t}, ${s.lnb.freq_l}/${s.lnb.freq_h}, ${s.tp.freq}/${s.tp.rate}/${p}, 22k ${k22})`
                     }
                     else {
                         data.ss = '';
